@@ -1,0 +1,15 @@
+export { ReactComponent as IconGoogle } from "./icon/icon-google.svg";
+export { ReactComponent as IconFrameLogin } from "./icon/icon-frame-login.svg";
+export { ReactComponent as IconPieChart } from "./icon/icon-pie-chart.svg";
+export { ReactComponent as IconProduct } from "./icon/icon-product.svg";
+export { ReactComponent as IconCustomer } from "./icon/icon-customer.svg";
+export { ReactComponent as IconBell } from "./icon/icon-bell.svg";
+export { ReactComponent as IconOrder } from "./icon/icon-order.svg";
+export { ReactComponent as IconAccount } from "./icon/icon-account.svg";
+export { ReactComponent as IconRevenue } from "./icon/icon-revenue.svg";
+export { ReactComponent as IconLocation } from "./icon/icon-location.svg";
+export { ReactComponent as IconRole } from "./icon/icon-role.svg";
+export { ReactComponent as IconSale } from "./icon/icon-sale.svg";
+export { ReactComponent as IconHomeFill } from "./icon/icon-home-fill.svg";
+export { ReactComponent as IconUserFill } from "./icon/icon-user-fill.svg";
+export { ReactComponent as IconLocationFill } from "./icon/icon-location-fill.svg";
