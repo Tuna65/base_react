@@ -9,10 +9,9 @@ const path = `/account` as const;
 
 export const accountApi = {
   async find(params?: IQueryAccount): Promise<ResPagination<IUser> | any> {
-    console.log(params);
-
     try {
       const res = await http.get(`${path}`, { params: params?.queryKey[1] });
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -22,6 +21,7 @@ export const accountApi = {
   async query(): Promise<ResPagination<IUser> | any> {
     try {
       const res = await http.get(`${path}`);
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -32,6 +32,7 @@ export const accountApi = {
     try {
       const res = await http.post(`${path}`, body);
       if (res.data.code) throw Error(res.data.message);
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -42,6 +43,7 @@ export const accountApi = {
     try {
       const res = await http.put(`${path}/${id}`, body);
       if (res.data.code) throw Error(res.data.message);
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -52,6 +54,7 @@ export const accountApi = {
     try {
       const res = await http.put(`${path}/change-password`, body);
       if (res.data.code) throw Error(res.data.message);
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -64,6 +67,7 @@ export const accountApi = {
       const data = { ...res.data };
       data.status = data.status == EStatus.ACTIVE ? true : false;
       data.password = "******";
+      if (res?.status !== 200) throw Error(res as any);
       return data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -75,6 +79,7 @@ export const accountApi = {
       const res = await http.get(`${path}/me`, {
         params: { businessId, shopId },
       });
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);
@@ -84,6 +89,7 @@ export const accountApi = {
   async delete(id: string): Promise<any | any> {
     try {
       const res = await http.delete(`${path}/${id}`);
+      if (res?.status !== 200) throw Error(res as any);
       return res.data;
     } catch (error: any) {
       message.error(error?.data?.message ?? error?.data?.message[0]);

@@ -12,7 +12,7 @@ type AsyncResult<T> = {
 
 const useAsync = <T>(
   callbackPromise: (...data: any[]) => Promise<T>,
-  syncFunc?: { onSucess: (data: T) => void; onFailed: (err?: any) => void }
+  syncFunc?: { onSucess: (data: T, body: any) => void; onFailed: (err?: any, body?: any) => void }
 ): AsyncResult<T> => {
   const { onSucess, onFailed } = syncFunc || {};
   const [data, setData] = useState([]);
@@ -26,17 +26,20 @@ const useAsync = <T>(
       setLoading(true);
       setStatus("pending");
       const response: any = await callbackPromise(...dataArgs);
+
+      if (response.status !== 200) throw new Error(JSON.stringify(response));
+
       if (response) {
-        setData(response);
+        setData(response.data);
         setStatus("success");
         setError("null");
         //@ts-ignore
-        onSucess(response);
-        return response;
+        onSucess(response.data, ...dataArgs);
+        return response.data;
       }
     } catch (error: any) {
       //@ts-ignore
-      onFailed && onFailed(error ?? {});
+      onFailed && onFailed(JSON.parse(error?.message) ?? {}, ...dataArgs);
       setError(error);
       setStatus("error");
       setLoading(false);
