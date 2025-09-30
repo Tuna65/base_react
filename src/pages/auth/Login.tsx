@@ -21,14 +21,14 @@ const Login = (props: ILoginProps) => {
   const { rulesForm } = useAuthService();
   const navigate = useNavigate();
   const onFinish = (v: any) => login(v);
-  const token = cookieStorageUtil.get(STORAGE.NAAT_TOKEN_KEY);
+  const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
 
   const { execute: login, loading } = useAsync(authSaleApi.login, {
     onSucess: (response: any) => {
       if (response) {
         // dispatch(authActions.setUser(res));
         // navigate(PATHNAME.DASHBOARD);
-        // cookieStorageUtil.set(res.accessToken, STORAGE.NAAT_TOKEN_KEY);
+        // cookieStorageUtil.set(res.accessToken, STORAGE.TOKEN_KEY);
       }
     },
     onFailed: (_error) => {},

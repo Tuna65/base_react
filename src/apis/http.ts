@@ -22,13 +22,13 @@ http.interceptors.response.use(
     if (
       (error.response?.status === 403 || error.response?.status === 401) &&
       !!!originalRequest._retry &&
-      cookieStorageUtil.get(STORAGE.NAAT_TOKEN_KEY)
+      cookieStorageUtil.get(STORAGE.TOKEN_KEY)
     ) {
       originalRequest._retry = true;
       try {
         return http(originalRequest);
       } catch (error) {
-        cookieStorageUtil.remove(STORAGE.NAAT_TOKEN_KEY);
+        cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
       }
     }
     return Promise.reject(error?.response);
@@ -37,9 +37,7 @@ http.interceptors.response.use(
 
 http.interceptors.request.use(
   (config) => {
-    config.headers.Authorization = `Bearer ${cookieStorageUtil.get(
-      STORAGE.NAAT_TOKEN_KEY
-    )}`;
+    config.headers.Authorization = `Bearer ${cookieStorageUtil.get(STORAGE.TOKEN_KEY)}`;
     return config;
   },
   (error) => {

@@ -28,7 +28,7 @@ const Header = () => {
   };
 
   const handleLogout = () => {
-    cookieStorageUtil.remove(STORAGE.NAAT_TOKEN_KEY);
+    cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
     dispatch(authActions.clear());
     return navigate(PATHNAME.AUTH.LOGIN);
   };

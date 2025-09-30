@@ -23,7 +23,7 @@ const Register = (props: IRegisterProps) => {
   };
 
   useEffect(() => {
-    cookieStorageUtil.remove(STORAGE.NAAT_TOKEN_KEY);
+    cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
   }, []);
   return (
     <Flex vertical gap={30}>

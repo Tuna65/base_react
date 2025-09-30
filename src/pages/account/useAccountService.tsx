@@ -141,7 +141,7 @@ const useAccountService = () => {
     } catch (error) {
       navigate(PATHNAME.AUTH.LOGIN);
       dispatch(authActions.clear());
-      cookieStorageUtil.remove(STORAGE.NAAT_TOKEN_KEY);
+      cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
       message.error("Token hết hạn hoặc không hợp lệ");
     }
   };
@@ -159,7 +159,7 @@ const useAccountService = () => {
       setLoading((prev) => ({ ...prev, detail: false }));
       navigate(PATHNAME.AUTH.LOGIN);
       dispatch(authActions.clear());
-      cookieStorageUtil.remove(STORAGE.NAAT_TOKEN_KEY);
+      cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
       message.error("Token hết hạn hoặc không hợp lệ");
     }
   };
