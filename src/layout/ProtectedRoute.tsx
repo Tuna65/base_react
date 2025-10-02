@@ -20,9 +20,9 @@ const ProtectedRoute = () => {
   });
 
   React.useEffect(() => {
-    const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
-    if (!token) naviage(PATHNAME.AUTH.LOGIN);
-    token && detailToken();
+    // const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
+    // if (!token) naviage(PATHNAME.AUTH.LOGIN);
+    // token && detailToken();
   }, []);
 
   return (

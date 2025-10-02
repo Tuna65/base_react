@@ -12,15 +12,12 @@ import useAuthService from "./useAuthService";
 import useAsync from "@/apis/useApi";
 import { authSaleApi } from "@/apis/auth";
 
-interface ILoginProps {}
-
-const Login = (props: ILoginProps) => {
+const Login = () => {
   const { t } = useTranslation();
   const naviage = useNavigate();
   const [form] = Form.useForm();
   const { rulesForm } = useAuthService();
   const navigate = useNavigate();
-  const onFinish = (v: any) => login(v);
   const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
 
   const { execute: login, loading } = useAsync(authSaleApi.login, {
@@ -33,6 +30,11 @@ const Login = (props: ILoginProps) => {
     },
     onFailed: (_error) => {},
   });
+
+  const onFinish = (v: any) => {
+    // login(v);
+    navigate(PATHNAME.DASHBOARD);
+  };
 
   useEffect(() => {
     if (token) naviage(PATHNAME.DASHBOARD);

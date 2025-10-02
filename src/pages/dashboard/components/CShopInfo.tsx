@@ -14,6 +14,7 @@ interface ICShopInfoProps {
 const CShopInfo = (props: ICShopInfoProps) => {
   const { shop, isLoading } = props;
   const { t } = useTranslation();
+  
   return (
     <Container type="SPIN" isLoading={isLoading}>
       <Flex className="p-4 bg-white rounded-lg shadow-box" vertical gap={12}>

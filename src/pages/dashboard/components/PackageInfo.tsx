@@ -1,5 +1,4 @@
 import Text from "@/components/Text";
-import usePackageService from "@/pages/package/usePackageService";
 import { Col, Flex, Row } from "antd";
 import React, { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -15,14 +14,12 @@ interface IPackageInfoProps {
 const PackageInfo = (props: IPackageInfoProps) => {
   const { packageId } = props;
   const { t } = useTranslation();
-  const { detailPackage, loading } = usePackageService();
   const [detailData, setDetailData] = useState<IPackage>();
 
-  useEffect(() => {
-    packageId && detailPackage(packageId, (data) => setDetailData(data));
-  }, [packageId]);
+  useEffect(() => {}, [packageId]);
+
   return (
-    <Container type="SPIN" isLoading={loading.detail}>
+    <Container type="SPIN" isLoading={false}>
       <Flex className="p-4 bg-white rounded-lg shadow-box" vertical gap={12}>
         <Text type="TITLE3">{t("Gói sửa dụng")}</Text>
         <Row gutter={[6, 6]}>
