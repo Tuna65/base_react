@@ -129,70 +129,71 @@ const useGlobalService = () => {
     ],
   };
 
-  const navItem: MenuProps["items"] = [
-    {
-      key: PATHNAME.SALE,
-      icon: React.createElement(IconSale),
-      label: `Bán hàng`,
-    },
-    {
-      key: PATHNAME.DASHBOARD,
-      icon: React.createElement(IconPieChart),
-      label: `Dashboard`,
-    },
-    {
-      key: PATHNAME.ORDER.INDEX,
-      icon: React.createElement(IconOrder),
-      label: <Text type="HEADLINE">{t("Đơn hàng")}</Text>,
-      // children: [
-      //   {
-      //     key: PATHNAME.ORDER.INDEX,
-      //     label: <Text type="HEADLINE">{"Order"}</Text>,
-      //   },
-      // ],
-    },
-    {
-      key: "PATHNAME.PRODUCT",
-      icon: React.createElement(IconProduct),
-      label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
-      children: [
-        {
-          key: PATHNAME.PRODUCT.INDEX,
-          label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
-        },
-        {
-          key: PATHNAME.PRODUCT_GROUP.INDEX,
-          label: <Text type="HEADLINE">{t("Nhóm sản phẩm")}</Text>,
-        },
-      ],
-    },
-    {
-      key: PATHNAME.USER.INDEX,
-      icon: React.createElement(IconAccount),
-      label: <Text type="HEADLINE">{t("Tài khoản")}</Text>,
-      // children: [
-      //   {
-      //     key: PATHNAME.USER.INDEX,
-      //     label: <Text type="HEADLINE">{t("Tài khoản")}</Text>,
-      //   },
-      // ],
-    },
-    {
-      key: PATHNAME.LOCATION.INDEX,
-      icon: React.createElement(IconLocation),
-      label: <Text type="HEADLINE">{t("Chi nhánh")}</Text>,
-    },
-    {
-      key: PATHNAME.ROLE.INDEX,
-      icon: (
-        <div className="opacity-30">
-          <IconRole />
-        </div>
-      ),
-      label: <Text type="HEADLINE">{t("Vai trò")}</Text>,
-    },
-  ];
   return { rulesForm, navItem };
 };
 
 export default useGlobalService;
+
+export const navItem = (t: any): MenuProps["items"] => [
+  {
+    key: PATHNAME.SALE,
+    icon: React.createElement(IconSale),
+    label: `Bán hàng`,
+  },
+  {
+    key: PATHNAME.DASHBOARD,
+    icon: React.createElement(IconPieChart),
+    label: `Dashboard`,
+  },
+  {
+    key: PATHNAME.ORDER.INDEX,
+    icon: React.createElement(IconOrder),
+    label: <Text type="HEADLINE">{t("Đơn hàng")}</Text>,
+    // children: [
+    //   {
+    //     key: PATHNAME.ORDER.INDEX,
+    //     label: <Text type="HEADLINE">{"Order"}</Text>,
+    //   },
+    // ],
+  },
+  {
+    key: "PATHNAME.PRODUCT",
+    icon: React.createElement(IconProduct),
+    label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
+    children: [
+      {
+        key: PATHNAME.PRODUCT.INDEX,
+        label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
+      },
+      {
+        key: PATHNAME.PRODUCT_GROUP.INDEX,
+        label: <Text type="HEADLINE">{t("Nhóm sản phẩm")}</Text>,
+      },
+    ],
+  },
+  {
+    key: PATHNAME.USER.INDEX,
+    icon: React.createElement(IconAccount),
+    label: <Text type="HEADLINE">{t("Tài khoản")}</Text>,
+    // children: [
+    //   {
+    //     key: PATHNAME.USER.INDEX,
+    //     label: <Text type="HEADLINE">{t("Tài khoản")}</Text>,
+    //   },
+    // ],
+  },
+  {
+    key: PATHNAME.LOCATION.INDEX,
+    icon: React.createElement(IconLocation),
+    label: <Text type="HEADLINE">{t("Chi nhánh")}</Text>,
+  },
+  {
+    key: PATHNAME.ROLE.INDEX,
+    icon: (
+      <div className="opacity-30">
+        <IconRole />
+      </div>
+    ),
+    label: <Text type="HEADLINE">{t("Vai trò")}</Text>,
+  },
+];
