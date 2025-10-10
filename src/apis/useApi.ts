@@ -27,7 +27,7 @@ const useAsync = <T>(
       setStatus("pending");
       const response: any = await callbackPromise(...dataArgs);
 
-      if (response.status !== 200) throw new Error(JSON.stringify(response));
+      if (response.status > 201) throw new Error(JSON.stringify(response));
 
       if (response) {
         setData(response.data);
