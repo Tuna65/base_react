@@ -4,7 +4,7 @@ import moment from "moment";
 export const func = {
   numberWithDots: function numberWithDots(num: number | string, subFix?: string) {
     if (!num) return 0;
-    return `${num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${subFix ? ` ${subFix}` : ""}`;
+    return `${num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",")}${subFix ? ` ${subFix}` : ""}`.replace(".00", "");
   },
 
   defaultAvatar: (name?: any) => {
@@ -64,5 +64,17 @@ export const func = {
       result += randomIndex < numbers.length ? numbers[randomIndex] : text[randomIndex - numbers.length];
     }
     return result;
+  },
+
+  getShopAlias: (): string | null => {
+    const hostname = window.location.hostname;
+
+    const parts = hostname.split(".");
+
+    if (parts.length >= 2) {
+      return parts[0];
+    }
+
+    return null;
   },
 };

@@ -13,13 +13,28 @@ interface ITableProps {
   columns: ColumnsType<any>;
   data?: ResPagination<any>;
   isSelectRow?: boolean;
+  expandedRowRender?: (record: any) => React.ReactNode;
+  rowExpandable?: (record: any) => boolean;
 }
 
 const BoxTable = (props: ITableProps) => {
-  const { isLoading, columns, data, isSelectRow } = props;
+  const { isLoading, columns, data, isSelectRow, expandedRowRender, rowExpandable } = props;
   const { t } = useTranslation();
   const { params, onParams } = useSearchQuery<any>();
   const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([]);
+
+  const [expandedRowKeys, setExpandedRowKeys] = useState<React.Key[]>([]);
+
+  // Hàm xử lý khi bấm mở/đóng
+  const onExpand = (expanded: boolean, record: any) => {
+    const key = record.id; // Hoặc record.key nếu data của bạn dùng field key
+    setExpandedRowKeys(
+      expanded
+        ? [key] // Thêm vào mảng để mở
+        : [], // Xóa khỏi mảng để đóng
+    );
+  };
+
   const onSelectChange = (newSelectedRowKeys: React.Key[]) => {
     setSelectedRowKeys(newSelectedRowKeys);
   };
@@ -29,21 +44,35 @@ const BoxTable = (props: ITableProps) => {
     onChange: onSelectChange,
   };
   return (
-    <div className="pb-4 bg-white shadow-box rounded-lg">
+    <div className="pb-4 rounded-lg">
       <div className="border border-solid border-black border-opacity-10 rounded-lg overflow-hidden">
         <Container type="SPIN" isLoading={isLoading}>
           {!isSelectRow ? (
             <TableAntd
               columns={columns}
+              rowKey="id"
               dataSource={data?.items}
               locale={{
                 emptyText: <Nodata />,
               }}
               pagination={false}
+              bordered
+              expandable={
+                expandedRowRender
+                  ? {
+                      expandedRowRender,
+                      rowExpandable,
+                      expandRowByClick: true,
+                      expandedRowKeys, // Truyền state vào đây để kiểm soát
+                      onExpand: onExpand, // Cập nhật state khi click
+                    }
+                  : undefined
+              }
             />
           ) : (
             <TableAntd
               columns={columns}
+              rowKey="id"
               dataSource={data?.items}
               locale={{
                 emptyText: <Nodata />,
@@ -53,6 +82,18 @@ const BoxTable = (props: ITableProps) => {
                 ...rowSelection,
               }}
               pagination={false}
+              bordered
+              expandable={
+                expandedRowRender
+                  ? {
+                      expandedRowRender,
+                      rowExpandable,
+                      expandRowByClick: true,
+                      expandedRowKeys, // Truyền state vào đây để kiểm soát
+                      onExpand: onExpand, // Cập nhật state khi click
+                    }
+                  : undefined
+              }
             />
           )}
         </Container>

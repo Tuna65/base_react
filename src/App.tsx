@@ -4,7 +4,7 @@ import "./App.css";
 import ComingSoon from "./components/ComingSoon";
 import Layout from "./layout/Layout";
 import ProtectedRoute from "./layout/ProtectedRoute";
-import { Login, Register, routerList } from "./pages";
+import { Login, Register, routerList, Shop } from "./pages";
 import LoginLayout from "./pages/auth";
 import { configAntdProvider } from "./utils";
 import { PATHNAME } from "./utils/Pathname";
@@ -15,6 +15,7 @@ function App() {
       <ConfigProvider theme={configAntdProvider}>
         <Routes>
           <Route path="/" element={<Navigate replace to={PATHNAME.AUTH.LOGIN} />} />
+          <Route path={"/shops"} element={<Shop />} />
           <Route element={<LoginLayout />}>
             <Route path={PATHNAME.AUTH.LOGIN} element={<Login />} />
             <Route path={PATHNAME.AUTH.REGISTER} element={<Register />} />

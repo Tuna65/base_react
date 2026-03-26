@@ -28,7 +28,7 @@ const Layout = () => {
 
   return (
     <div>
-      <AntLayout>
+      <AntLayout style={{ height: "100vh" }}>
         <Sider trigger={null} collapsible collapsed={openSidebar} theme="light" className="h-screen overflow-hidden">
           <Flex
             className="h-[64px] px-2 border-0 border-b border-solid border-black border-opacity-10"
@@ -54,17 +54,18 @@ const Layout = () => {
             className=""
             onClick={(i) => navigate(i.key)}
             onOpenChange={(o) => setOpenKeys(o)}
-            inlineCollapsed={openSidebar}
+            // inlineCollapsed={openSidebar}
             theme="light"
           />
         </Sider>
-        <AntLayout>
-          <Header style={{ padding: 0, background: "#fff", boxShadow: "0 2px 8px #f0f1f2" }} className="pb-3">
+        <AntLayout style={{ overflow: "hidden" }}>
+          <Header style={{ padding: 0, background: "#fff", boxShadow: "0 2px 8px #f0f1f2", flexShrink: 0 }} className="pb-3">
             <HeaderCustom />
           </Header>
           <Content
             style={{
               padding: 16,
+              overflowY: "auto",
             }}
           >
             <Outlet />

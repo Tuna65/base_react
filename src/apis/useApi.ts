@@ -3,7 +3,7 @@ import { useState } from "react";
 type AsyncStatus = "idle" | "pending" | "success" | "error";
 
 type AsyncResult<T> = {
-  data?: T[];
+  data?: T;
   loading?: boolean;
   status?: AsyncStatus;
   error?: any;
@@ -12,10 +12,10 @@ type AsyncResult<T> = {
 
 const useAsync = <T>(
   callbackPromise: (...data: any[]) => Promise<T>,
-  syncFunc?: { onSucess: (data: T, body: any) => void; onFailed: (err?: any, body?: any) => void }
+  syncFunc?: { onSucess: (data: T, body: any) => void; onFailed?: (err?: any, body?: any) => void },
 ): AsyncResult<T> => {
   const { onSucess, onFailed } = syncFunc || {};
-  const [data, setData] = useState([]);
+  const [data, setData] = useState<T>();
   const [loading, setLoading] = useState<boolean>(false);
   const [status, setStatus] = useState<AsyncStatus>("idle");
   const [error, setError] = useState<any>("");

@@ -7,7 +7,7 @@ import { Button, Flex, Form, Input } from "antd";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
-import useUserService from "../account/useAccountService";
+import useUserService from "../nhan-vien/useAccountService";
 import useAuthService from "./useAuthService";
 interface IRegisterProps {}
 

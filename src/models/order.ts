@@ -1,22 +1,83 @@
-import { ILineItem } from "@/types/pos";
+import { Shop } from "@/types/shop";
 import { IBaseEntity } from ".";
+import { Product, ProductOption } from "@/types/product";
 
-export interface IOrder extends IBaseEntity {
-  shopId: string;
+export interface Orders extends IBaseEntity {
+  orderNumber: string; // Mã đơn hàng (VD: ORD-123456)
 
-  createdByName: string;
+  totalAmount: number; // Tổng tiền đơn hàng
 
-  locationId: string;
+  orderStatus: OrderStatus;
 
-  locationName: string;
+  shippingAddress: string;
 
-  note: string;
+  customerNote: string;
 
-  code: string;
+  isPaid: boolean;
 
-  discount: number;
+  paymentMethod: string;
 
-  status: string;
+  shop: Shop;
 
-  lineItems: ILineItem[];
+  userId: number;
+
+  user: any;
+
+  items: OrderItem[];
+}
+
+export interface CreateOrderDTO {
+  orderNumber?: string;
+
+  totalAmount: number;
+
+  orderStatus?: OrderStatus;
+
+  shippingAddress: string;
+
+  customerNote?: string;
+
+  isPaid?: boolean;
+
+  paymentMethod?: string;
+
+  shopId: number;
+
+  userId: number;
+
+  items: CreateOrderItemDTO[];
+}
+
+export enum OrderStatus {
+  PENDING = "PENDING",
+  CONFIRMED = "CONFIRMED",
+  SHIPPING = "SHIPPING",
+  DELIVERED = "DELIVERED",
+  CANCELLED = "CANCELLED",
+}
+
+export interface CreateOrderItemDTO {
+  quantity: number;
+
+  price: number;
+
+  productId: number;
+
+  productOptionId: number;
+}
+
+export interface OrderItem extends IBaseEntity {
+  quantity: number;
+
+  price: number;
+
+  orderId: number;
+
+  productOptionId: number;
+
+  order: Orders;
+
+  product: Product;
+
+  productOption: ProductOption;
 }

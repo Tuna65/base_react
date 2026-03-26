@@ -36,7 +36,7 @@ const HeaderCustom = () => {
   const items: MenuProps["items"] = [
     {
       key: "1",
-      label: <Text type="BODY">{account?.name}</Text>,
+      label: <Text type="BODY">{account?.fullName}</Text>,
     },
     {
       key: "2",
@@ -64,14 +64,17 @@ const HeaderCustom = () => {
                 <BellOutlined />
               </div>
             </Tooltip>
-            <Dropdown menu={{ items }} placement="bottomRight" arrow={{ pointAtCenter: true }}>
-              <Image
-                className="rounded-lg cursor-pointer mb-8"
-                width={32}
-                height={32}
-                src={func.avatar(account?.name, account?.image)}
-                preview={false}
-              />
+            <Dropdown menu={{ items }} placement="bottom" arrow={{ pointAtCenter: true }}>
+              <div className="flex items-center justify-center gap-2">
+                <Image
+                  className="rounded-lg cursor-pointer mb-8"
+                  width={32}
+                  height={32}
+                  src={func.avatar(account?.fullName, account?.image)}
+                  preview={false}
+                />
+                <Text>{account?.fullName}</Text>
+              </div>
             </Dropdown>
           </Flex>
         </Flex>

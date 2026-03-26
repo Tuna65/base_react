@@ -1,5 +1,4 @@
 export const STORAGE = {
   TOKEN_KEY: "k",
-  NAAT_USER_ID: "NAAT_USER_ID",
-  LOCATION_ID: "LOCATION_ID",
+  REFRESH_TOKEN_KEY: "k",
 };

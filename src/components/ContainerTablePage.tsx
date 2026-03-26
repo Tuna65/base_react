@@ -11,10 +11,13 @@ type Props = {
   column: any;
   data: ResPagination<any>;
   actionCreate?: VoidFunc;
+  renderAction?: React.ReactNode;
+  expandedRowRender?: (record: any) => React.ReactNode;
+  rowExpandable?: (record: any) => boolean;
 };
 
 const ContainerTablePage = (props: Props) => {
-  const { loading, data, column, actionCreate } = props;
+  const { loading, data, column, actionCreate, renderAction, expandedRowRender, rowExpandable } = props;
   const { t } = useTranslation();
   const { params, onParams } = useSearchQuery();
 
@@ -32,14 +35,26 @@ const ContainerTablePage = (props: Props) => {
             onChange={(name) => onParams({ ...params, name })}
           />
         </Flex>
+
         <Flex>
-          <Button size="large" type="primary" onClick={() => actionCreate && actionCreate()}>
-            {t("Thêm mới")}
-          </Button>
+          {renderAction}
+          {actionCreate && (
+            <Flex>
+              <Button size="large" type="primary" onClick={() => actionCreate && actionCreate()}>
+                {t("Thêm mới")}
+              </Button>
+            </Flex>
+          )}
         </Flex>
       </Flex>
 
-      <BoxTable data={data} columns={column} isLoading={loading} />
+      <BoxTable
+        data={data}
+        columns={column}
+        isLoading={loading}
+        expandedRowRender={expandedRowRender}
+        rowExpandable={rowExpandable}
+      />
     </Flex>
   );
 };

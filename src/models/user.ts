@@ -1,37 +1,21 @@
-import { EStatus } from "@/enum/EStatus";
+import { Shop } from "@/types/shop";
 import { IBaseEntity } from ".";
-import { IRole } from "./role";
+import { Orders } from "./order";
 
-export interface IUser extends IBaseEntity {
-  name: string;
+export interface User extends IBaseEntity {
+  fullName: string;
 
   username: string;
 
+  phoneNumber: string;
+
+  orders: Orders[];
+
+  shopId: number;
+
+  shop: Shop;
+
   password: string;
 
-  email: string;
-
-  phone: string;
-
-  shopId: string;
-
-  image: string;
-
-  role?: IRole;
-
-  roleId?: string;
-
-  isOwner: boolean;
-
-  city: boolean;
-
-  district: boolean;
-
-  ward: boolean;
-
-  address: boolean;
-
-  status: EStatus | boolean;
-
-  gender: string;
+  address: string;
 }

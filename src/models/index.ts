@@ -1,4 +1,5 @@
 import React from "react";
+import { IUser } from "./user";
 
 export type TRouterList = {
   path: string;
@@ -30,8 +31,14 @@ export type VoidFunc = () => void;
 export type SuccessFunc<T> = (value: T) => void;
 
 export interface IBaseEntity {
-  id?: string;
+  id?: number;
   createdAt?: string;
   updateAt?: string;
   createdBy?: string;
+}
+
+export interface ResLogin {
+  accessToken: string;
+  refreshToken: string;
+  data: IUser;
 }

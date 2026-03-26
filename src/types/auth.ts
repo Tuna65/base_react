@@ -3,5 +3,5 @@ export interface BodySaleLogin {
 
   password: string;
 
-  shopAlias: string;
+  shopAlias: string | null;
 }

@@ -21,7 +21,7 @@ export const PATHNAME = {
     EDIT_ID: (id?: string) => `/shop/chinh-sua/${id}`,
     DETAIL_ID: (id?: string) => `/shop/${id}`,
   },
-  PRODUCT: {
+  SAN_PHAM: {
     INDEX: "/san-pham",
     CREATE: "/san-pham/them-moi",
     DETAIL: "/san-pham/:id",
@@ -38,6 +38,15 @@ export const PATHNAME = {
     DETAIL_ID: (id?: string) => `/nhan-vien/${id}`,
   },
 
+  KHACH_HANG: {
+    INDEX: "/khach-hang",
+    CREATE: "/khach-hang/them-moi",
+    DETAIL: "/khach-hang/:id",
+    EDIT: "/khach-hang/chinh-sua/:id",
+    EDIT_ID: (id?: string) => `/khach-hang/chinh-sua/${id}`,
+    DETAIL_ID: (id?: string) => `/khach-hang/${id}`,
+  },
+
   LOCATION: {
     INDEX: "/chi-nhanh",
     CREATE: "/chi-nhanh/them-moi",
@@ -46,6 +55,25 @@ export const PATHNAME = {
     EDIT_ID: (id?: string) => `/chi-nhanh/chinh-sua/${id}`,
     DETAIL_ID: (id?: string) => `/chi-nhanh/${id}`,
   },
+
+  NHAP_HANG: {
+    INDEX: "/nhap-hang",
+    CREATE: "/nhap-hang/them-moi",
+    DETAIL: "/nhap-hang/:id",
+    EDIT: "/nhap-hang/chinh-sua/:id",
+    EDIT_ID: (id?: string) => `/nhap-hang/chinh-sua/${id}`,
+    DETAIL_ID: (id?: string) => `/nhap-hang/${id}`,
+  },
+
+  PHAN_LOAI: {
+    INDEX: "/phan-loai",
+    CREATE: "/phan-loai/them-moi",
+    DETAIL: "/phan-loai/:id",
+    EDIT: "/phan-loai/chinh-sua/:id",
+    EDIT_ID: (id?: string) => `/phan-loai/chinh-sua/${id}`,
+    DETAIL_ID: (id?: string) => `/phan-loai/${id}`,
+  },
+
   PACKAGE: {
     INDEX: "/goi",
     CREATE: "/goi/them-moi",
