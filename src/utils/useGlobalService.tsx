@@ -196,6 +196,10 @@ export const navItem = (t: any): MenuProps["items"] => [
         key: PATHNAME.KHACH_HANG.INDEX,
         label: <Text type="HEADLINE">{t("Khách hàng")}</Text>,
       },
+      {
+        key: PATHNAME.KHACH_LE.INDEX,
+        label: <Text type="HEADLINE">{t("Khách lẻ")}</Text>,
+      },
     ],
   },
   // {

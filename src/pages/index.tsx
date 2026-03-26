@@ -34,11 +34,16 @@ export const ChiTietSanPham = () => LazyLayout(() => import("./san-pham/ChiTietS
 export const Order = () => LazyLayout(() => import("./don-hang"));
 export const ThemMoiDonHang = () => LazyLayout(() => import("./don-hang/ThemMoiDonHang"));
 export const KhachHang = () => LazyLayout(() => import("./khach-hang"));
+export const KhachLe = () => LazyLayout(() => import("./khach-le"));
 
 export const routerList: TRouterList[] = [
   {
     component: <KhachHang />,
     path: PATHNAME.KHACH_HANG.INDEX,
+  },
+  {
+    component: <KhachLe />,
+    path: PATHNAME.KHACH_LE.INDEX,
   },
   {
     component: <Order />,

@@ -47,6 +47,15 @@ export const PATHNAME = {
     DETAIL_ID: (id?: string) => `/khach-hang/${id}`,
   },
 
+  KHACH_LE: {
+    INDEX: "/khach-le",
+    CREATE: "/khach-le/them-moi",
+    DETAIL: "/khach-le/:id",
+    EDIT: "/khach-le/chinh-sua/:id",
+    EDIT_ID: (id?: string) => `/khach-le/chinh-sua/${id}`,
+    DETAIL_ID: (id?: string) => `/khach-le/${id}`,
+  },
+
   LOCATION: {
     INDEX: "/chi-nhanh",
     CREATE: "/chi-nhanh/them-moi",

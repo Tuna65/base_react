@@ -16,6 +16,7 @@ export const categoryApi = {
       message.error(messages);
     }
   },
+  
   async edit(body: Category): Promise<Category | any> {
     try {
       const res = await http.put(`${path}`, body);

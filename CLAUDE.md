@@ -32,6 +32,16 @@ src/
 ### Pages & Lazy Loading
 - Mỗi page dùng `React.lazy()` và wrap bằng `LazyLayout()` helper
 - Thêm page mới: tạo file, export qua `src/pages/index.tsx`, đăng ký route trong `src/App.tsx`
+---
+- Cấu trúc của 1 page
+pages/<name>/
+  /componets -> folder chứa các component con
+  <name> thêm.tsx -> nếu modal hãy thêm từ Modal vào name
+  <name> sửa.tsx -> nếu modal hãy thêm từ Modal vào name
+  index.tsx -> trang danh sách
+  - Trong file index.tsx sử dụng component ContainerTablePage `src/component/ContainerTablePage`
+  - Trong mọi table sẽ có 2 thao tác sửa và xóa. thao tác xóa luôn luôn là popconfirm và gọi api remove
+
 
 ### API Layer
 - Base URL: `http://localhost:3070/api/v1`
