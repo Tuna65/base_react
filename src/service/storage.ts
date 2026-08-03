@@ -13,6 +13,19 @@ export const localStorageUtil = {
   remove: (key: string) => localStorage.removeItem(key),
 };
 
+export const sessionStorageUtil = {
+  get: <T>(key: string): T | undefined => {
+    try {
+      const item = sessionStorage.getItem(key);
+      return item ? (JSON.parse(item) as T) : undefined;
+    } catch {
+      return undefined;
+    }
+  },
+  set: (value: unknown, key: string) => sessionStorage.setItem(key, JSON.stringify(value)),
+  remove: (key: string) => sessionStorage.removeItem(key),
+};
+
 export const cookieStorageUtil = {
   get: (key: string) => {
     try {

@@ -1,6 +1,16 @@
-import { IconAccount, IconProduct, IconSale } from "@/assets/Icon";
-import Text from "@/components/Text";
 import { PATHNAME } from "@/utils/Pathname";
+import {
+  AppstoreOutlined,
+  BarChartOutlined,
+  BookOutlined,
+  CalendarOutlined,
+  DatabaseOutlined,
+  FileTextOutlined,
+  FolderOpenOutlined,
+  PlayCircleOutlined,
+  RightOutlined,
+  SettingOutlined,
+} from "@ant-design/icons";
 import { MenuProps } from "antd";
 import React from "react";
 import { useTranslation } from "react-i18next";
@@ -135,15 +145,57 @@ const useGlobalService = () => {
 
 export default useGlobalService;
 
-export const navItem = (t: any): MenuProps["items"] => [
-  {
-    key: PATHNAME.PREVIEW,
-    icon: React.createElement(IconProduct),
-    label: `Document`,
-  },
+const expandableLabel = (label: string) => (
+  <span className="flex w-full items-center justify-between">
+    {label}
+    <RightOutlined className="origin-center scale-[0.6] text-[10px] text-[#71809a]" />
+  </span>
+);
+
+export const navItem = (): MenuProps["items"] => [
   {
     key: PATHNAME.JIRA.INDEX,
-    icon: React.createElement(IconSale),
-    label: `Jira`,
+    icon: React.createElement(AppstoreOutlined),
+    label: "Dashboard",
+  },
+  {
+    key: PATHNAME.REQUIREMENTS,
+    icon: React.createElement(FileTextOutlined),
+    label: "Requirements",
+  },
+  {
+    key: "test-repository",
+    icon: React.createElement(FolderOpenOutlined),
+    label: expandableLabel("Test Repository"),
+  },
+  {
+    key: "test-plan",
+    icon: React.createElement(CalendarOutlined),
+    label: "Test Plan",
+  },
+  {
+    key: "test-execution",
+    icon: React.createElement(PlayCircleOutlined),
+    label: "Test Execution",
+  },
+  {
+    key: PATHNAME.KNOWLEDGE,
+    icon: React.createElement(BookOutlined),
+    label: "Knowledge",
+  },
+  {
+    key: "test-data",
+    icon: React.createElement(DatabaseOutlined),
+    label: expandableLabel("Test Data"),
+  },
+  {
+    key: "reports",
+    icon: React.createElement(BarChartOutlined),
+    label: expandableLabel("Reports"),
+  },
+  {
+    key: "settings",
+    icon: React.createElement(SettingOutlined),
+    label: expandableLabel("Settings"),
   },
 ];

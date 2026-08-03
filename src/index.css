@@ -1,19 +1,19 @@
+@import "@fontsource-variable/geist";
 @import "tailwindcss/base";
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
-@import url("https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;1,700;1,900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap");
 
 body {
   box-sizing: border-box;
   padding: 0;
   margin: 0;
+  font-family: "Geist Variable", "Geist", sans-serif;
 }
 
 * {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 400;
-  /* font-family: "Poppins", sans-serif; */
+  font-family: inherit;
 }
 
 p,
@@ -63,6 +63,78 @@ h6 {
 .ant-menu-item-selected {
   background-color: #5932ea !important;
   color: #fff !important;
+}
+
+@layer components {
+  .app-sidebar .ant-menu-item-selected {
+    @apply !bg-[#cfe0f1] !text-[#0a315f];
+  }
+
+  .app-sidebar .ant-menu-item-selected .ant-menu-item-icon {
+    @apply !text-[#4f78aa];
+  }
+
+  .ant-table-wrapper .ant-table {
+    @apply !text-[12px] !text-[#415675];
+  }
+
+  .ant-table-wrapper .ant-table-thead > tr > th {
+    @apply !border-b !border-solid !border-[#e3e7ed] !bg-[#f7f3ed] !px-1 !py-2 !text-[11px] !font-semibold !uppercase !tracking-[0.01em] !text-[#60708b];
+  }
+
+  .ant-table-wrapper .ant-table-tbody > tr > td {
+    @apply !border-b !border-solid !border-[#e5e9ef] !px-1 !py-2 !text-[11px];
+  }
+
+  .ant-table-wrapper .ant-table-thead > tr > th *,
+  .ant-table-wrapper .ant-table-tbody > tr > td * {
+    @apply !text-[11px];
+  }
+
+  .ant-table-wrapper .ant-table-tbody > tr:hover > td {
+    @apply !bg-[#f9fbfd];
+  }
+
+  .ant-table-wrapper .ant-pagination {
+    @apply !mx-4 !my-3 !items-center;
+  }
+
+  .ant-table-wrapper .ant-pagination-total-text {
+    @apply !mr-auto !text-[12px] !text-[#526889];
+  }
+
+  .ant-table-wrapper .ant-pagination-item,
+  .ant-table-wrapper .ant-pagination-prev .ant-pagination-item-link,
+  .ant-table-wrapper .ant-pagination-next .ant-pagination-item-link {
+    @apply !rounded-md !border-[#d6dee9];
+  }
+
+  .ant-table-wrapper .ant-pagination-item-active {
+    @apply !border-[#5b83bb] !bg-[#5b83bb];
+  }
+
+  .ant-table-wrapper .ant-pagination-item-active a {
+    @apply !text-white;
+  }
+
+  .ant-table-wrapper .ant-pagination-options {
+    @apply !order-first !mr-3 !flex !items-center !gap-2;
+  }
+
+  .ant-table-wrapper .ant-pagination-options::before {
+    content: "Per page";
+    @apply !text-[12px] !text-[#526889];
+  }
+
+  .ant-table-wrapper .ant-pagination-options-size-changer {
+    @apply !m-0 !min-w-[72px];
+  }
+
+  .ant-table-wrapper .ant-pagination-item,
+  .ant-table-wrapper .ant-pagination-prev,
+  .ant-table-wrapper .ant-pagination-next {
+    @apply !min-w-[28px] !h-7 !leading-7 !text-[12px];
+  }
 }
 
 .ant-menu.ant-menu-sub.ant-menu-inline {
@@ -259,4 +331,7 @@ h6 {
   border: 0;
   border-top: 1px solid #d1d5db;
   margin: 2rem 0;
+}
+.ant-drawer-body > [class*="-mx-6"] > div:first-child {
+  border-bottom: 0 !important;
 }

@@ -1,28 +1,19 @@
 import { STORAGE } from "@/configs/storage";
-import { cookieStorageUtil } from "@/service/storage";
-import axios, { InternalAxiosRequestConfig } from "axios";
+import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
+import { API_URL } from "@/configs/env";
+import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-const REFRESH_TOKEN_URL = "/auth-staff/refresh-token";
+type RetriableRequestConfig = InternalAxiosRequestConfig & { _retry?: boolean };
 
-let isRefreshing = false;
-let failedQueue: {
-  resolve: (value: any) => void;
-  reject: (reason: any) => void;
-}[] = [];
-
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else if (token) {
-      prom.resolve(token);
-    }
-  });
-  failedQueue = [];
+type RefreshTokenResponse = {
+  access_token: string;
+  refresh_token: string;
 };
 
+let refreshRequest: Promise<string> | null = null;
+
 const http = axios.create({
-  baseURL: "http://localhost:3070/api/v1",
+  baseURL: API_URL,
 });
 
 http.interceptors.request.use(
@@ -49,77 +40,45 @@ http.interceptors.request.use(
 
 http.interceptors.response.use(
   (response) => response,
-  async (error) => {
-    const originalRequest = error.config as InternalAxiosRequestConfig & {
-      _retry?: boolean;
-    };
-    const { response } = error;
+  async (error: AxiosError) => {
+    const request = error.config as RetriableRequestConfig | undefined;
+    const refreshToken = cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY);
+    const isAuthRequest = request?.url?.includes("/auth/login") || request?.url?.includes("/auth/refresh-token");
 
     if (
-      (response?.status === 401 || response?.status === 403) &&
-      !originalRequest._retry &&
-      cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY)
+      !request ||
+      request._retry ||
+      isAuthRequest ||
+      (error.response?.status !== 401 && error.response?.status !== 403) ||
+      !refreshToken
     ) {
-      originalRequest._retry = true;
-
-      if (isRefreshing) {
-        return new Promise(function (resolve, reject) {
-          failedQueue.push({ resolve, reject });
-        })
-          .then((token) => {
-            originalRequest.headers!.Authorization = `Bearer ${token}`;
-            return http(originalRequest);
-          })
-          .catch((err) => Promise.reject(err));
-      }
-
-      isRefreshing = true;
-
-      try {
-        const currentRefreshToken = cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY);
-
-        const refreshResponse = await axios.post(
-          REFRESH_TOKEN_URL,
-          {},
-          {
-            baseURL: originalRequest.baseURL,
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${currentRefreshToken}`,
-            },
-          },
-        );
-
-        const { accessToken, refreshToken } = refreshResponse.data;
-
-        if (accessToken) {
-          const accessExpires = new Date(new Date().getTime() + 30 * 1000);
-          const refreshExpires = new Date(new Date().getTime() + 100 * 60 * 60 * 1000);
-
-          cookieStorageUtil.set(accessToken, STORAGE.TOKEN_KEY, {
-            expires: accessExpires,
-          });
-          cookieStorageUtil.set(refreshToken || currentRefreshToken, STORAGE.REFRESH_TOKEN_KEY, {
-            expires: refreshExpires,
-          });
-
-          processQueue(null, accessToken);
-
-          originalRequest.headers!.Authorization = `Bearer ${accessToken}`;
-          return http(originalRequest);
-        } else {
-          throw new Error("Invalid token response");
-        }
-      } catch (refreshError) {
-        processQueue(refreshError, null);
-
-        return Promise.reject(refreshError);
-      } finally {
-        isRefreshing = false;
-      }
+      return Promise.reject(error);
     }
 
-    return Promise.reject(error?.response || error);
+    request._retry = true;
+
+    try {
+      refreshRequest ??= axios
+        .post<RefreshTokenResponse>(`${API_URL}/auth/refresh-token`, {
+          refresh_token: refreshToken,
+        })
+        .then(({ data }) => {
+          cookieStorageUtil.set(data.access_token, STORAGE.TOKEN_KEY, { expires: 1 });
+          cookieStorageUtil.set(data.refresh_token, STORAGE.REFRESH_TOKEN_KEY, { expires: 7 });
+          return data.access_token;
+        });
+
+      const accessToken = await refreshRequest;
+      request.headers.Authorization = `Bearer ${accessToken}`;
+      return http(request);
+    } catch (refreshError) {
+      cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
+      cookieStorageUtil.remove(STORAGE.REFRESH_TOKEN_KEY);
+      sessionStorageUtil.remove(STORAGE.USER_KEY);
+      return Promise.reject(refreshError);
+    } finally {
+      refreshRequest = null;
+    }
   },
 );
 

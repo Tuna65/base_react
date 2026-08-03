@@ -1,6 +1,7 @@
 import { jiraApi } from "@/apis/jira";
 import { llmApi } from "@/apis/llm";
-import { JiraIssueTypeDto } from "@/models/jira.model";
+import { API_URL } from "@/configs/env";
+import useApi from "@/apis/useApi";
 import {
   SyncOutlined,
   CheckCircleOutlined,
@@ -17,6 +18,7 @@ import {
   CalendarOutlined,
   SafetyCertificateOutlined,
   PlusOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import {
   Badge,
@@ -44,60 +46,29 @@ import React, { useEffect, useState } from "react";
 import ReactMarkdown from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import remarkGfm from "remark-gfm";
+import { Link, useSearchParams } from "react-router-dom";
+import { PATHNAME } from "@/utils/Pathname";
+import Overview from "./components/Overview";
+import TestDesign from "./components/TestDesign";
+import TestDesignHeader from "./components/TestDesignHeader";
+import RequirementDrawer from "./components/RequirementDrawer";
+import {
+  ISSUE_TYPE_OPTIONS,
+  JiraIssue,
+  SyncFormState,
+  formatBytes,
+  filterIssues,
+  getDocumentNamesByIssue,
+  getIssuesFromResponse,
+  getIssuesTotal,
+  getStringValue,
+  issueTypeColor,
+  priorityColor,
+} from "./helper";
 
 const { Title, Text } = Typography;
 
-const API_BASE = "http://localhost:8001/api/v1/jira";
-
 // ===== Types =====
-export interface JiraIssue {
-  id?: number | string;
-  jiraId?: string;
-  key: any;
-  projectKey?: any;
-  summary: any;
-  status: any;
-  issueType: any;
-  issuetype?: any;
-  priority?: any;
-  assignee?: any;
-  sprint?: any;
-  storyPoints?: any;
-  created?: any;
-  updated?: any;
-  description?: any;
-}
-
-interface SyncFormState {
-  projectKey: string;
-  defaultSprint: string;
-  issueTypes: string[];
-}
-
-const ISSUE_TYPE_OPTIONS = [
-  { label: "Task", value: "Task" },
-  { label: "Story", value: "Story" },
-  { label: "Bug", value: "Bug" },
-  { label: "Epic", value: "Epic" },
-  { label: "Sub-task", value: "Sub-task" },
-];
-
-const issueTypeColor: Record<string, string> = {
-  Task: "blue",
-  Story: "green",
-  Bug: "red",
-  Epic: "purple",
-  "Sub-task": "cyan",
-};
-
-const priorityColor: Record<string, string> = {
-  Highest: "red",
-  High: "orange",
-  Medium: "gold",
-  Low: "blue",
-  Lowest: "default",
-};
-
 const statusIcon: Record<string, React.ReactNode> = {
   "To Do": <ClockCircleOutlined style={{ color: "#8c8c8c" }} />,
   "In Progress": <SyncOutlined spin style={{ color: "#1890ff" }} />,
@@ -105,163 +76,229 @@ const statusIcon: Record<string, React.ReactNode> = {
 };
 
 // Helper để trích xuất chuỗi từ string hoặc object Jira API
-const getStringValue = (val: any): string => {
-  if (!val) return "";
-  if (typeof val === "string") return val;
-  if (typeof val === "number") return String(val);
-  if (typeof val === "object") {
-    return val.name || val.displayName || val.value || val.label || val.summary || "";
-  }
-  return String(val);
+const LegacyGeneralOverview = ({ detailData }: { detailData: Record<string, unknown> }) => {
+  const issueKey = getStringValue(detailData.key) || "---";
+  const requirementId = getStringValue(detailData.requirementId || detailData.requirement_id) || "---";
+  const issueType = getStringValue(detailData.issueType || detailData.issuetype) || "Task";
+  const sprint = getStringValue(detailData.sprint) || "TES Sprint 4";
+  const lastSync = getStringValue(detailData.updated || detailData.updatedAt) || "---";
+  const details = [["Requirement ID", requirementId], ["Type", issueType], ["Sprint", sprint], ["Assignee", getStringValue(detailData.assignee) || "---"], ["Sync status", "Synced"], ["Test design", "See /test-design"], ["Labels", "—"], ["Last sync", lastSync]];
+
+  return <div className="-mx-6 -mt-6 text-[#1a2638]"><div className="border-b border-solid border-[#e5eaf1] px-6 pb-4 pt-3"><div className="mb-2 flex items-center gap-2 text-[12px] text-[#4f7fb8]"><span>{issueKey} ↗</span><span>•</span><span>{requirementId}</span><span>•</span><Tag className="!m-0 !border-blue-200 !bg-blue-50 !text-[#4f7fb8]">{issueType}</Tag></div><h2 className="m-0 text-[18px] font-bold">{getStringValue(detailData.summary) || "Untitled requirement"}</h2><div className="mt-2 text-[12px] text-[#66758d]">{sprint} • Last sync {lastSync}</div></div><div className="flex h-10 items-end gap-5 border-b border-solid border-[#e5eaf1] px-6 text-[13px] font-semibold text-[#64748b]"><span className="flex h-full items-center border-b-2 border-[#4f7fb8] text-[#4f7fb8]">▣ &nbsp; Overview</span><span className="flex h-full items-center">☷ &nbsp; Sub-tasks</span><span className="flex h-full items-center">♙ &nbsp; Test Design</span><span className="flex h-full items-center">⌘ &nbsp; Test Cases (0)</span><span className="flex h-full items-center">◴ &nbsp; Versions</span></div><div className="space-y-5 px-6 py-6 text-[13px]"><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Description</h3><p className="m-0 whitespace-pre-wrap leading-6">{getStringValue(detailData.description) || "---"}</p></section><section className="grid grid-cols-2 gap-x-10 gap-y-3">{details.map(([label, value]) => <div key={label} className="flex justify-between"><span className="font-bold uppercase text-[#65738b]">{label}</span><span>{value}</span></div>)}</section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Traceability</h3><div className="space-y-2 rounded-lg border border-solid border-[#e1e8f0] bg-[#fbfaf7] p-3"><div>Jira: <span className="text-[#4f7fb8]">{issueKey}</span></div><div>↔ Requirement: {requirementId}</div><div>↔ Test Cases: 0 cases</div></div></section><section><div className="mb-2 flex justify-between"><h3 className="m-0 text-[12px] font-bold uppercase text-[#65738b]">Test Case Status</h3><span className="text-[#65738b]">Total: 0 · Pass rate <span className="text-[#4f7fb8]">0%</span></span></div><div className="rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] py-4 text-center text-[#69778d]">No test cases have been generated yet.</div></section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">▣ Test Data</h3><div className="rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] p-3 text-[#69778d]">No dataset linked to this requirement yet.</div></section><section><h3 className="mb-1 text-[12px] font-bold uppercase text-[#65738b]">RSD Documents</h3><div className="flex items-center justify-between"><div><div className="font-semibold">Related RSD Documents</div><div className="mt-1 text-[#69778d]">0 document(s) · 0 active · Linked to {requirementId}</div></div><div className="flex gap-2"><Button size="small">↗ &nbsp; Confluence link</Button><Button type="primary" size="small" className="!bg-[#5b83bb]">⇧ &nbsp; Upload RSD</Button></div></div><div className="mt-4 rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] py-8 text-center text-[#69778d]">▧<div className="mt-2 font-semibold text-[#1a2638]">No documents yet</div></div></section></div></div>;
 };
 
-const formatBytes = (bytes: number): string => {
-  if (!bytes || isNaN(bytes)) return "";
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
+void LegacyGeneralOverview;
+
+const LegacyOverview = ({ detailData, onTestDesign }: { detailData: Record<string, unknown>; onTestDesign: () => void }) => {
+  const issueKey = getStringValue(detailData.key) || "---";
+  const requirementId = getStringValue(detailData.requirementId || detailData.requirement_id) || "---";
+  const issueType = getStringValue(detailData.issueType || detailData.issuetype) || "Task";
+  const sprint = getStringValue(detailData.sprint) || "TES Sprint 4";
+  const lastSync = getStringValue(detailData.updated || detailData.updatedAt) || "---";
+  const facts = [["Requirement ID", requirementId], ["Type", issueType], ["Sprint", sprint], ["Assignee", getStringValue(detailData.assignee) || "---"], ["Sync status", "Synced"], ["Test design", "See /test-design"], ["Labels", "—"], ["Last sync", lastSync]];
+
+  return <div className=" text-[#1a2638]"><div className="px-6 pb-4 pt-3"><div className="mb-2 flex gap-2 text-[12px] text-[#4f7fb8]"><span>{issueKey} ↗</span><span>•</span><span>{requirementId}</span><Tag className="!m-0 !border-blue-200 !bg-blue-50 !text-[#4f7fb8]">{issueType}</Tag></div><h2 className="m-0 text-[18px] font-bold">{getStringValue(detailData.summary) || "Untitled requirement"}</h2><div className="mt-2 text-[12px] text-[#66758d]">{sprint} • Last sync {lastSync}</div></div><div className="flex h-10 items-end gap-5 border-b border-solid border-[#e5eaf1] px-6 text-[13px] font-semibold text-[#64748b]"><button type="button" className="h-full border-0 border-b-2 border-[#4f7fb8] bg-transparent px-0 text-[#4f7fb8]">Overview</button><button type="button" className="h-full border-0 bg-transparent">Sub-tasks</button><button type="button" onClick={onTestDesign} className="h-full cursor-pointer border-0 bg-transparent">Test Design</button><button type="button" className="h-full border-0 bg-transparent">Test Cases (0)</button><button type="button" className="h-full border-0 bg-transparent">Versions</button></div><div className="space-y-5 px-6 py-6 text-[13px]"><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Description</h3><p className="m-0 whitespace-pre-wrap">{getStringValue(detailData.description) || "---"}</p></section><section className="grid grid-cols-2 gap-x-10 gap-y-3">{facts.map(([label, value]) => <div key={label} className="flex justify-between"><span className="font-bold uppercase text-[#65738b]">{label}</span><span>{value}</span></div>)}</section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Traceability</h3><div className="space-y-2 rounded-lg border border-solid border-[#e1e8f0] bg-[#fbfaf7] p-3">Jira: <span className="text-[#4f7fb8]">{issueKey}</span><div>↔ Requirement: {requirementId}</div><div>↔ Test Cases: 0 cases</div></div></section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Test Case Status</h3><div className="rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] py-4 text-center text-[#69778d]">No test cases have been generated yet.</div></section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">Test Data</h3><div className="rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] p-3 text-[#69778d]">No dataset linked to this requirement yet.</div></section><section><h3 className="mb-2 text-[12px] font-bold uppercase text-[#65738b]">RSD Documents</h3><div className="rounded-lg border border-dashed border-[#cfd9e6] bg-[#fbfaf7] py-8 text-center text-[#69778d]">No documents yet</div></section></div></div>;
 };
+
+const LegacyTestDesignContent = ({ planLoading, planResult, verifyLoading, verifyResult, onPlan, onVerify }: { planLoading: boolean; planResult: unknown; verifyLoading: boolean; verifyResult: unknown; onPlan: () => void; onVerify: () => void }) => {
+  const contentOf = (value: unknown) => {
+    if (typeof value === "string") return value;
+    if (value && typeof value === "object" && "content" in value) return String((value as { content?: unknown }).content || "");
+    return "";
+  };
+  const renderContent = (content: string, empty: string) => content ? <article className="markdown-body rounded-lg border border-gray-200 bg-white p-5"><ReactMarkdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{content}</ReactMarkdown></article> : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={empty} />;
+  return <div className="px-6 py-5"><Tabs items={[{ key: "plan", label: <span><CalendarOutlined /> &nbsp;Plan</span>, children: <div><div className="mb-4 flex justify-end"><Button type="primary" loading={planLoading} onClick={onPlan} className="!bg-[#5b83bb]">{planResult ? "Regen Plan" : "Create Plan"}</Button></div>{planLoading ? <div className="py-12 text-center"><Spin /><div className="mt-3 text-[#66758d]">Đang tạo plan...</div></div> : renderContent(contentOf(planResult), "No plan has been generated yet.")}</div> }, { key: "verify", label: <span><SafetyCertificateOutlined /> &nbsp;Verify</span>, children: <div><div className="mb-4 flex justify-end"><Button type="primary" loading={verifyLoading} onClick={onVerify} className="!bg-[#5b83bb]">{verifyResult ? "Regen Verify" : "Run Verify"}</Button></div>{verifyLoading ? <div className="py-12 text-center"><Spin /><div className="mt-3 text-[#66758d]">Đang verify tài liệu...</div></div> : renderContent(contentOf(verifyResult), "No verification has been generated yet.")}</div> }]} /></div>;
+};
+
+const RequirementContextHeader = ({ detailData, onOverview }: { detailData: Record<string, unknown>; onOverview: () => void }) => {
+  const issueKey = getStringValue(detailData.key) || "---";
+  const requirementId = getStringValue(detailData.requirementId || detailData.requirement_id) || "---";
+  const issueType = getStringValue(detailData.issueType || detailData.issuetype) || "Task";
+  const sprint = getStringValue(detailData.sprint) || "TES Sprint 4";
+  const lastSync = getStringValue(detailData.updated || detailData.updatedAt) || "---";
+  return <div className="-mx-6 -mt-6 border-b border-solid border-[#e5eaf1] text-[#1a2638]"><div className="px-6 pb-4 pt-3"><div className="mb-2 flex gap-2 text-[12px] text-[#4f7fb8]"><span>{issueKey} ↗</span><span>•</span><span>{requirementId}</span><Tag className="!m-0 !border-blue-200 !bg-blue-50 !text-[#4f7fb8]">{issueType}</Tag></div><h2 className="m-0 text-[18px] font-bold">{getStringValue(detailData.summary) || "Untitled requirement"}</h2><div className="mt-2 text-[12px] text-[#66758d]">{sprint} • Last sync {lastSync}</div></div><div className="flex h-10 items-end gap-5 border-t border-solid border-[#e5eaf1] px-6 text-[13px] font-semibold text-[#64748b]"><button type="button" onClick={onOverview} className="h-full cursor-pointer border-0 bg-transparent px-0">Overview</button><button type="button" className="h-full border-0 bg-transparent">Sub-tasks</button><button type="button" className="h-full border-0 border-b-2 border-[#4f7fb8] bg-transparent px-0 text-[#4f7fb8]">Test Design</button><button type="button" className="h-full border-0 bg-transparent">Test Cases (0)</button><button type="button" className="h-full border-0 bg-transparent">Versions</button></div></div>;
+};
+
+void LegacyGeneralOverview;
+void LegacyOverview;
+void LegacyTestDesignContent;
+void RequirementContextHeader;
 
 const JiraPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
   // ===== States =====
-  const [issues, setIssues] = useState<JiraIssue[]>([]);
-  const [totalCount, setTotalCount] = useState<number>(0);
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [pageSize, setPageSize] = useState<number>(20);
-
-  const [loading, setLoading] = useState<boolean>(false);
-  const [syncing, setSyncing] = useState<boolean>(false);
-  const [syncModalOpen, setSyncModalOpen] = useState<boolean>(false);
-
-  // ===== Detail State =====
-  const [detailDrawerOpen, setDetailDrawerOpen] = useState<boolean>(false);
-  const [detailLoading, setDetailLoading] = useState<boolean>(false);
-  const [detailData, setDetailData] = useState<any>(null);
-
-  // ===== LLM Plan & Verify States =====
-  const [planLoading, setPlanLoading] = useState<boolean>(false);
-  const [planResult, setPlanResult] = useState<any>(null);
-
-  const [verifyLoading, setVerifyLoading] = useState<boolean>(false);
-  const [verifyResult, setVerifyResult] = useState<any>(null);
-
-  // ===== Sync Form State =====
-  const [syncForm, setSyncForm] = useState<SyncFormState>({
-    projectKey: "TES",
-    defaultSprint: "9",
-    issueTypes: ["Task", "Story", "Bug"],
+  const [issueList, setIssueList] = useState({ items: [] as JiraIssue[], total: 0, currentPage: 1, pageSize: 20 });
+  const [loading, setLoading] = useState({ issues: false, sync: false, detail: false, plan: false, verify: false });
+  const [sync, setSync] = useState({
+    modalOpen: false,
+    form: { projectKey: "TES", defaultSprint: "4", issueTypes: ["Task", "Story", "Bug"] } as SyncFormState,
   });
+  const [drawer, setDrawer] = useState({
+    open: false,
+    data: null as any,
+    tab: "general",
+    section: "overview" as "overview" | "test-design",
+  });
+  const [testDesign, setTestDesign] = useState({ planResult: null as any, verifyResult: null as any });
+  const [filters, setFilters] = useState({ projectKey: "TES", sprint: "4", issueTypes: [] as string[], searchTerm: "" });
+  const { items: issues, total: totalCount, currentPage, pageSize } = issueList;
+  const { issues: issuesLoading, sync: syncing, detail: detailLoading, plan: planLoading, verify: verifyLoading } = loading;
+  const { modalOpen: syncModalOpen, form: syncForm } = sync;
+  const { open: detailDrawerOpen, data: detailData, tab: detailTab, section: detailSection } = drawer;
+  const { planResult, verifyResult } = testDesign;
+  const { projectKey: filterProjectKey, sprint: filterSprint, issueTypes: filterIssueTypes, searchTerm } = filters;
+  const updateIssueList = (next: Partial<typeof issueList>) => setIssueList((current) => ({ ...current, ...next }));
+  const updateLoading = (next: Partial<typeof loading>) => setLoading((current) => ({ ...current, ...next }));
+  const updateSync = (next: Partial<typeof sync>) => setSync((current) => ({ ...current, ...next }));
+  const updateDrawer = (next: Partial<typeof drawer>) => setDrawer((current) => ({ ...current, ...next }));
+  const updateTestDesign = (next: Partial<typeof testDesign>) => setTestDesign((current) => ({ ...current, ...next }));
+  const urlIssueKey = searchParams.get("issueKey");
+  const [documentNamesByIssue, setDocumentNamesByIssue] = useState<Record<string, string[]>>({});
+  const { execute: requestIssues } = useApi<unknown>(jiraApi.getIssues);
+  const { execute: requestSync } = useApi<unknown>(jiraApi.sync);
+  const { execute: requestPlan } = useApi<unknown>(llmApi.plan);
+  const { execute: requestVerify } = useApi<unknown>(llmApi.verify);
+  const { execute: requestPlanState } = useApi<unknown>(jiraApi.updatePlanState);
+  const { execute: requestVerifyState } = useApi<unknown>(jiraApi.updateVerifyState);
+  const { execute: requestDocuments } = useApi<unknown>(() => axios.get(`${API_URL}/document`));
 
-  // ===== Filter States =====
-  const [filterProjectKey, setFilterProjectKey] = useState<string>("TES");
-  const [filterSprint, setFilterSprint] = useState<string>("9");
-  const [filterIssueTypes, setFilterIssueTypes] = useState<string[]>([]);
+  const loadSavedPlan = async (issueKey: string) => {
+    const response = await jiraApi.getPlan(issueKey);
+    updateTestDesign({ planResult: response?.data || null });
+  };
+
+  const loadSavedVerify = async (issueKey: string) => {
+    const response = await jiraApi.getVerify(issueKey);
+    updateTestDesign({ verifyResult: response?.data || null });
+  };
 
   // ===== LLM Plan API Call (POST /api/v1/llm/plan) =====
   const handleCreatePlan = async () => {
     if (!detailData) return;
-    setPlanLoading(true);
+    updateLoading({ plan: true });
     try {
       const payload = {
         issueKey: getStringValue(detailData.key),
       };
-      const res = await llmApi.plan(payload);
-      if (res && res.data) {
-        setPlanResult(res.data);
+      const planState = await requestPlanState(payload.issueKey, "CREATING");
+      if (!planState) return;
+      const data = (await requestPlan(payload)) as { message?: string } | undefined;
+      if (data?.message) {
+        message.warning(data.message);
+        return;
+      }
+      if (data) {
+        await loadSavedPlan(payload.issueKey);
         message.success("Tạo Plan thành công!");
       }
     } catch (err: any) {
       console.error("Lỗi khi tạo Plan:", err);
     } finally {
-      setPlanLoading(false);
+      updateLoading({ plan: false });
     }
   };
 
   // ===== LLM Verify API Call (POST /api/v1/llm/verify) =====
   const handleVerify = async () => {
     if (!detailData) return;
-    setVerifyLoading(true);
+    updateLoading({ verify: true });
     try {
       const payload = {
         issueKey: getStringValue(detailData.key),
       };
-      const res = await llmApi.verify(payload);
-      if (res && res.data) {
-        setVerifyResult(res.data.results || []);
+      const verifyState = await requestVerifyState(payload.issueKey, "VERIFYING");
+      if (!verifyState) return;
+      const data = await requestVerify(payload);
+      if (data) {
+        await loadSavedVerify(payload.issueKey);
         message.success("Verify task thành công!");
       }
     } catch (err: any) {
       console.error("Lỗi khi verify task:", err);
     } finally {
-      setVerifyLoading(false);
+      updateLoading({ verify: false });
     }
+  };
+
+  const approvePlan = async (): Promise<boolean> => {
+    const issueKey = getStringValue(detailData?.key);
+    if (!issueKey) return false;
+
+    const result = await requestPlanState(issueKey, "PASSED");
+    if (!result) return false;
+    updateTestDesign({ planResult: result });
+    message.success("Plan đã được duyệt.");
+    return true;
+  };
+
+  const approveVerify = async (): Promise<boolean> => {
+    const issueKey = getStringValue(detailData?.key);
+    if (!issueKey) return false;
+
+    const result = await requestVerifyState(issueKey, "PASSED");
+    if (!result) return false;
+    updateTestDesign({ verifyResult: result });
+    message.success("Verify đã được duyệt. Bạn có thể tạo Plan.");
+    return true;
   };
 
   // ===== 1. GET /api/v1/jira/issues =====
   const fetchIssues = async (page = currentPage, limit = pageSize) => {
-    setLoading(true);
+    updateLoading({ issues: true });
     try {
-      const params = new URLSearchParams();
-      if (filterProjectKey) params.append("projectKey", filterProjectKey);
-      if (filterSprint) params.append("sprint", filterSprint);
-      filterIssueTypes.forEach((type) => params.append("issueTypes", type));
-      params.append("maxResults", String(limit));
-      params.append("startAt", String((page - 1) * limit));
+      const data = await requestIssues({
+        projectKey: filterProjectKey || undefined,
+        sprint: filterSprint || undefined,
+        issueTypes: filterIssueTypes.length ? filterIssueTypes : undefined,
+        maxResults: limit,
+        startAt: (page - 1) * limit,
+      });
 
-      const response = await axios.get(`${API_BASE}/issues?${params.toString()}`);
-      const data = response.data;
-
-      if (Array.isArray(data)) {
-        setIssues(data);
-        setTotalCount(data.length);
-      } else if (data && typeof data === "object") {
-        const issueList = data.issues || data.items || data.content || [];
-        setIssues(Array.isArray(issueList) ? issueList : []);
-        setTotalCount(data.total || (Array.isArray(issueList) ? issueList.length : 0));
-      } else {
-        setIssues([]);
-        setTotalCount(0);
-      }
+      const issueList = getIssuesFromResponse(data);
+      updateIssueList({ items: issueList, total: getIssuesTotal(data, issueList.length) });
     } catch (err: any) {
       console.error("Lỗi khi tải danh sách issues:", err);
       message.error(err?.response?.data?.message || "Không thể kết nối đến máy chủ API");
-      setIssues([]);
-      setTotalCount(0);
+      updateIssueList({ items: [], total: 0 });
     } finally {
-      setLoading(false);
+      updateLoading({ issues: false });
     }
   };
 
   // ===== 2. GET /api/v1/jira/issue?key=TES-123 (Detail) =====
   const handleOpenDetail = async (issueKey: string) => {
     if (!issueKey) return;
-    setDetailDrawerOpen(true);
-    setDetailLoading(true);
-    setDetailData(null);
-    setPlanResult(null);
-    setVerifyResult(null);
+    updateDrawer({ open: true, data: null, tab: "general", section: "overview" });
+    updateLoading({ detail: true });
+    updateTestDesign({ planResult: null, verifyResult: null });
 
     try {
+      void loadSavedPlan(issueKey);
+      void loadSavedVerify(issueKey);
       const res = await jiraApi.getIssueDetail(issueKey);
       if (res && res.data) {
-        setDetailData(res.data);
+        updateDrawer({ data: res.data });
       } else {
         // Fallback search in list if detail API returns empty
         const found = issues.find(
           (item) => getStringValue(item.key) === issueKey || getStringValue(item.id) === issueKey
         );
-        setDetailData(found || null);
+        updateDrawer({ data: found || null });
       }
     } catch (err: any) {
       console.error("Lỗi khi lấy chi tiết task:", err);
     } finally {
-      setDetailLoading(false);
+      updateLoading({ detail: false });
     }
   };
 
+  useEffect(() => {
+    if (urlIssueKey) void handleOpenDetail(urlIssueKey);
+  }, [urlIssueKey]);
+
   // ===== 3. POST /api/v1/jira/sync =====
   const handleSync = async () => {
-    setSyncing(true);
+    updateLoading({ sync: true });
     try {
       const payload = {
         projectKey: syncForm.projectKey,
@@ -269,22 +306,37 @@ const JiraPage: React.FC = () => {
         issueTypes: syncForm.issueTypes,
       };
 
-      const res = await axios.post(`${API_BASE}/sync`, payload);
-      const syncedCount = res.data?.syncedCount ?? res.data?.count;
+      const data = (await requestSync(payload)) as
+        | { syncedCount?: number; count?: number }
+        | undefined;
+      const syncedCount = data?.syncedCount ?? data?.count;
       message.success(`Đồng bộ Jira thành công! ${syncedCount !== undefined ? `(${syncedCount} tasks)` : ""}`);
-      setSyncModalOpen(false);
+      updateSync({ modalOpen: false });
       await fetchIssues(1, pageSize);
     } catch (err: any) {
       console.error("Lỗi khi sync task Jira:", err);
       message.error(err?.response?.data?.message || "Đồng bộ thất bại");
     } finally {
-      setSyncing(false);
+      updateLoading({ sync: false });
     }
   };
 
   // Tự động load danh sách khi mở trang
   useEffect(() => {
     fetchIssues(1, pageSize);
+  }, []);
+
+  useEffect(() => {
+    const loadDocumentNames = async () => {
+      try {
+        const data = await requestDocuments();
+        setDocumentNamesByIssue(getDocumentNamesByIssue(data));
+      } catch {
+        setDocumentNamesByIssue({});
+      }
+    };
+
+    void loadDocumentNames();
   }, []);
 
   // ===== Columns configuration =====
@@ -413,9 +465,22 @@ const JiraPage: React.FC = () => {
     },
   ];
 
+  const requirementColumns: TableProps<JiraIssue>["columns"] = [
+    { title: "Key", width: 100, render: (_, record) => { const key = getStringValue(record.key); return key ? <a href={`https://jira.alphawaytech.com/browse/${encodeURIComponent(key)}`} target="_blank" rel="noreferrer" onClick={(event) => event.stopPropagation()} className="text-[12px] font-medium text-[#4f7fb8] hover:underline">{key} ↗</a> : "-"; } },
+    { title: "Summary", render: (_, record) => <Text className="text-[13px] text-[#071b3b]">{getStringValue(record.summary) || "-"}</Text> },
+    { title: "Type", width: 100, align: "center", render: (_, record) => { const type = getStringValue(record.issuetype || record.issueType); return <Tag className={`!m-0 !rounded-md !px-2 !py-0 !text-[12px] ${type === "Bug" ? "!border-pink-200 !bg-pink-50 !text-pink-600" : type === "Story" ? "!border-emerald-200 !bg-emerald-50 !text-emerald-700" : "!border-blue-200 !bg-blue-50 !text-blue-600"}`}>{type || "Task"}</Tag>; } },
+    { title: "Sprint", width: 140, render: (_, record) => <Text className="text-[13px]">{getStringValue(record.sprint) || "TES Sprint 4"}</Text> },
+    { title: "Assignee", width: 170, render: (_, record) => <Text className="text-[13px]">{getStringValue(record.assignee) || "-"}</Text> },
+    { title: "Status", width: 150, render: (_, record) => <span className={`inline-flex min-w-[128px] items-center justify-between rounded-md border px-2.5 py-1 text-[12px] ${getStringValue(record.status) === "In Progress" ? "border-[#bfd6ef] bg-[#eef6ff] text-[#4678b5]" : "border-[#eadfc5] bg-[#f2ead8] text-[#071b3b]"}`}>{getStringValue(record.status) || "To Do"}<span className="text-[#7d8796]">⌄</span></span> },
+    { title: "Documents", width: 210, render: (_, record) => { const key = getStringValue(record.key); const names = documentNamesByIssue[key] || []; return names.length ? <Link to={`${PATHNAME.KNOWLEDGE}?issueKey=${encodeURIComponent(key)}`} onClick={(event) => event.stopPropagation()} className="block truncate text-[12px] font-medium text-[#5b83bb] hover:underline" title={names.join(", ")}>{names[0]}{names.length > 1 ? ` +${names.length - 1}` : ""}</Link> : "---"; } },
+    { title: "ACTIONS", width: 190, align: "center", render: (_, record) => { const key = getStringValue(record.key); return <div className="flex items-center justify-center gap-2"><Button type="text" size="small" onClick={(event) => { event.stopPropagation(); void handleOpenDetail(key); }} className="!h-7 !bg-[#f7faff] !px-2 !text-[12px] !text-[#5b83bb]">✧ Design</Button><Button type="text" size="small" className="!h-7 !bg-[#f8fffb] !px-2 !text-[12px] !text-[#64b69a]">♧ Cases</Button></div>; } },
+  ];
+
+  const visibleIssues = filterIssues(issues, searchTerm, filterIssueTypes);
+
   return (
-    <div style={{ padding: 16 }}>
-      <Flex vertical gap={24}>
+    <div className="w-full px-0 py-1 text-[#071b3b]">
+      {false && (<><Flex vertical gap={24}>
         {/* ===== Top Header Bar ===== */}
         <Flex justify="space-between" align="center">
           <div>
@@ -425,10 +490,10 @@ const JiraPage: React.FC = () => {
             <Text type="secondary">Danh sách tasks đồng bộ từ hệ thống Jira (Nhấn vào hàng để xem chi tiết)</Text>
           </div>
           <Space>
-            <Button icon={<ReloadOutlined />} onClick={() => fetchIssues(currentPage, pageSize)} loading={loading}>
+            <Button icon={<ReloadOutlined />} onClick={() => fetchIssues(currentPage, pageSize)} loading={issuesLoading}>
               Tải lại
             </Button>
-            <Button type="primary" icon={<SyncOutlined />} onClick={() => setSyncModalOpen(true)} size="large">
+            <Button type="primary" icon={<SyncOutlined />} onClick={() => updateSync({ modalOpen: true })} size="large">
               Sync task từ Jira
             </Button>
           </Space>
@@ -444,14 +509,14 @@ const JiraPage: React.FC = () => {
             <Input
               placeholder="Project Key (VD: TES)"
               value={filterProjectKey}
-              onChange={(e) => setFilterProjectKey(e.target.value)}
+              onChange={(e) => setFilters((current) => ({ ...current, projectKey: e.target.value }))}
               style={{ width: 180 }}
               allowClear
             />
             <Input
               placeholder="Sprint (VD: 9)"
               value={filterSprint}
-              onChange={(e) => setFilterSprint(e.target.value)}
+              onChange={(e) => setFilters((current) => ({ ...current, sprint: e.target.value }))}
               style={{ width: 140 }}
               allowClear
             />
@@ -459,7 +524,7 @@ const JiraPage: React.FC = () => {
               mode="multiple"
               placeholder="Loại Issue"
               value={filterIssueTypes}
-              onChange={setFilterIssueTypes}
+              onChange={(issueTypes) => setFilters((current) => ({ ...current, issueTypes }))}
               options={ISSUE_TYPE_OPTIONS}
               style={{ minWidth: 220 }}
               allowClear
@@ -467,10 +532,10 @@ const JiraPage: React.FC = () => {
             <Button
               type="primary"
               onClick={() => {
-                setCurrentPage(1);
+                updateIssueList({ currentPage: 1 });
                 fetchIssues(1, pageSize);
               }}
-              loading={loading}
+              loading={issuesLoading}
             >
               Lọc
             </Button>
@@ -486,7 +551,7 @@ const JiraPage: React.FC = () => {
               const k = getStringValue(record.key) || getStringValue(record.id);
               return k || `task-${index}`;
             }}
-            loading={loading}
+            loading={issuesLoading}
             onRow={(record) => ({
               onClick: () => {
                 const k = getStringValue(record.key) || getStringValue(record.id);
@@ -499,8 +564,7 @@ const JiraPage: React.FC = () => {
               pageSize: pageSize,
               total: totalCount,
               onChange: (page, size) => {
-                setCurrentPage(page);
-                setPageSize(size);
+                updateIssueList({ currentPage: page, pageSize: size });
                 fetchIssues(page, size);
               },
               showSizeChanger: true,
@@ -518,7 +582,28 @@ const JiraPage: React.FC = () => {
             scroll={{ x: 1000 }}
           />
         </div>
-      </Flex>
+      </Flex></>)}
+
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <div className="mb-2 flex items-center gap-2 text-[12px] text-[#526889]"><span className="rounded-md bg-[#d7e7f6] px-2 py-0.5 font-semibold text-[#4f7fb8]">Workspace_16/07/2026</span><span>Sync Jira tasks/stories into Requirements so QA can generate Test Designs &amp; Test Cases.</span></div>
+          <div className="flex items-center gap-2"><SyncOutlined className="text-[18px] text-[#4f7fb8]" /><h1 className="m-0 text-[22px] font-bold">Requirements</h1></div>
+        </div>
+        <div className="flex gap-2"><Link to={PATHNAME.KNOWLEDGE}><Button className="!h-9 !rounded-lg !font-semibold">KnowledgeHub</Button></Link><Button className="!h-9 !rounded-lg !font-semibold">⌘ &nbsp; Mapped: TES</Button><Button disabled className="!h-9 !rounded-lg !font-semibold">⇧ &nbsp; Push to Jira</Button><Button type="primary" loading={syncing} onClick={() => updateSync({ modalOpen: true })} className="!h-9 !rounded-lg !bg-[#5b83bb] !px-4 !font-semibold">⟳ &nbsp; Sync Tasks</Button></div>
+      </div>
+
+      <div className="mb-6 rounded-xl border border-solid border-[#e1e8f0] bg-white px-4 py-4"><div className="flex items-center gap-3"><CheckCircleOutlined className="text-[17px] text-[#10a360]" /><div><div className="text-[14px] font-semibold">Ready to sync · Jira Project: TES</div><div className="mt-1 text-[12px] text-[#526889]">https://jira.alphawaytech.com · Shared across all projects in this workspace</div></div></div></div>
+
+      <div className="mb-6 grid grid-cols-4 gap-3">{[
+        ["SYNCED ITEMS", `${totalCount || issues.length}`, `/ ${totalCount || issues.length}`],
+        ["TEST DESIGN APPROVED", "0", `/ ${totalCount || issues.length}`],
+        ["TEST CASES GENERATED", "113", ""],
+        ["LAST SYNC", "2026-07-30T08:35:55.041Z", ""],
+      ].map(([label, value, suffix]) => <div key={label} className="min-h-[88px] rounded-xl border border-solid border-[#e1e8f0] bg-white px-4 py-4"><div className="text-[11px] font-semibold text-[#526889]">{label}</div><div className={`${label === "LAST SYNC" ? "mt-1 text-[14px]" : "mt-1 text-[24px]"} font-bold`}>{value}<span className="ml-1 text-[12px] font-medium text-[#526889]">{suffix}</span></div></div>)} </div>
+
+      <div className="mb-6 flex items-center gap-2"><div className="flex h-9 w-[448px] items-center gap-2 rounded-md border border-solid border-[#d9e2ef] bg-white px-3"><SearchOutlined className="text-[#71809a]" /><input value={searchTerm} onChange={(event) => setFilters((current) => ({ ...current, searchTerm: event.target.value }))} placeholder="Search by Jira key or summary..." className="h-full w-full border-0 bg-transparent text-[13px] outline-none placeholder:text-[#71809a]" /></div><Select value={filterIssueTypes[0] || "all"} onChange={(value) => setFilters((current) => ({ ...current, issueTypes: value === "all" ? [] : [value] }))} options={[{ label: "All types", value: "all" }, ...ISSUE_TYPE_OPTIONS]} className="w-[140px]" /><Select value={filterSprint || "4"} onChange={(sprint) => setFilters((current) => ({ ...current, sprint }))} options={[{ label: "TES Sprint 4", value: "4" }, { label: "All sprints", value: "" }]} className="w-[140px]" /></div>
+
+      <div className="overflow-hidden rounded-xl border border-solid border-[#e1e8f0] bg-white"><Table className="app-data-table" columns={requirementColumns} dataSource={visibleIssues} loading={issuesLoading} rowKey={(record, index) => getStringValue(record.key) || getStringValue(record.id) || `issue-${index}`} onRow={(record) => ({ onClick: () => { const key = getStringValue(record.key) || getStringValue(record.id); if (key) void handleOpenDetail(key); }, className: "cursor-pointer" })} pagination={{ current: currentPage, pageSize, total: totalCount, onChange: (page, size) => { updateIssueList({ currentPage: page, pageSize: size }); void fetchIssues(page, size); }, showSizeChanger: true }} locale={{ emptyText: <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="No synced requirements" /> }} scroll={{ x: 1050 }} /></div>
 
       {/* ===== Sync Modal ===== */}
       <Modal
@@ -529,7 +614,7 @@ const JiraPage: React.FC = () => {
           </Space>
         }
         open={syncModalOpen}
-        onCancel={() => setSyncModalOpen(false)}
+        onCancel={() => updateSync({ modalOpen: false })}
         onOk={handleSync}
         confirmLoading={syncing}
         okText="Bắt đầu Sync"
@@ -542,7 +627,7 @@ const JiraPage: React.FC = () => {
             <Input
               placeholder="VD: TES"
               value={syncForm.projectKey}
-              onChange={(e) => setSyncForm({ ...syncForm, projectKey: e.target.value })}
+              onChange={(e) => updateSync({ form: { ...syncForm, projectKey: e.target.value } })}
               size="large"
               style={{ marginTop: 4 }}
             />
@@ -553,7 +638,7 @@ const JiraPage: React.FC = () => {
             <Input
               placeholder="VD: 9"
               value={syncForm.defaultSprint}
-              onChange={(e) => setSyncForm({ ...syncForm, defaultSprint: e.target.value })}
+              onChange={(e) => updateSync({ form: { ...syncForm, defaultSprint: e.target.value } })}
               size="large"
               style={{ marginTop: 4 }}
             />
@@ -565,7 +650,7 @@ const JiraPage: React.FC = () => {
               mode="multiple"
               placeholder="Chọn loại issue"
               value={syncForm.issueTypes}
-              onChange={(val) => setSyncForm({ ...syncForm, issueTypes: val })}
+              onChange={(issueTypes) => updateSync({ form: { ...syncForm, issueTypes } })}
               options={ISSUE_TYPE_OPTIONS}
               style={{ width: "100%", marginTop: 4 }}
               size="large"
@@ -575,20 +660,13 @@ const JiraPage: React.FC = () => {
       </Modal>
 
       {/* ===== Issue Detail Drawer ===== */}
-      <Drawer
-        title={
-          detailData ? (
-            <Space align="center">
-              <Tag color="blue">{getStringValue(detailData.key)}</Tag>
-              <span>{getStringValue(detailData.summary) || "Chi tiết Task Jira"}</span>
-            </Space>
-          ) : (
-            "Chi tiết Task Jira"
-          )
-        }
+      {false && <Drawer
+        title={null}
+        closable={false}
+        styles={{ header: { display: "none" } }}
         width="50%"
         open={detailDrawerOpen}
-        onClose={() => setDetailDrawerOpen(false)}
+        onClose={() => updateDrawer({ open: false })}
       >
         {detailLoading ? (
           <div className="flex flex-col items-center justify-center py-16 gap-3">
@@ -596,17 +674,24 @@ const JiraPage: React.FC = () => {
             <Text type="secondary">Đang tải chi tiết task...</Text>
           </div>
         ) : detailData ? (
-          <Tabs
-            defaultActiveKey="general"
+          <>
+            {detailSection === "overview" ? <Overview detailData={detailData} /> : <><TestDesignHeader detailData={detailData} onOverview={() => updateDrawer({ section: "overview" })} onTestDesign={() => updateDrawer({ section: "test-design" })} /><TestDesign planLoading={planLoading} planResult={planResult} verifyLoading={verifyLoading} verifyResult={verifyResult} onPlan={() => void handleCreatePlan()} onVerify={() => void handleVerify()} onApprovePlan={approvePlan} onApproveVerify={approveVerify} /></>}
+            {false && <Tabs
+            className="requirements-detail-tabs"
+            activeKey={detailTab}
+            onChange={(tab) => updateDrawer({ tab })}
             items={[
               {
                 key: "general",
                 label: (
                   <span>
-                    <InfoCircleOutlined /> General
+                    <InfoCircleOutlined /> Overview
                   </span>
                 ),
                 children: (
+                  <>
+                    <Overview detailData={detailData} />
+                    {false && (
                   <Flex vertical gap={20} style={{ paddingTop: 8 }}>
                     {/* Header Summary Card */}
                     <Card size="small" style={{ background: "#f8fafc", borderColor: "#e2e8f0" }}>
@@ -809,6 +894,8 @@ const JiraPage: React.FC = () => {
                       </div>
                     )}
                   </Flex>
+                    )}
+                  </>
                 ),
               },
               {
@@ -828,7 +915,7 @@ const JiraPage: React.FC = () => {
                         loading={planLoading}
                         onClick={handleCreatePlan}
                       >
-                        Tạo Plan với AI
+                        {planResult ? "Regen Plan" : "Tạo Plan với AI"}
                       </Button>
                     </Flex>
 
@@ -836,7 +923,7 @@ const JiraPage: React.FC = () => {
                       <Card size="small" style={{ textAlign: "center", padding: 24 }}>
                         <Spin size="large" />
                         <div style={{ marginTop: 12 }}>
-                          <Text type="secondary">Đang gọi AI tạo Plan (`POST /api/v1/llm/plan`)...</Text>
+                          <Text type="secondary">Đang tạo plan...</Text>
                         </div>
                       </Card>
                     ) : planResult ? (
@@ -892,7 +979,7 @@ const JiraPage: React.FC = () => {
                         loading={verifyLoading}
                         onClick={handleVerify}
                       >
-                        Chạy Verify
+                        {verifyResult ? "Regen Verify" : "Chạy Verify"}
                       </Button>
                     </Flex>
 
@@ -900,7 +987,7 @@ const JiraPage: React.FC = () => {
                       <Card size="small" style={{ textAlign: "center", padding: 24 }}>
                         <Spin size="large" />
                         <div style={{ marginTop: 12 }}>
-                          <Text type="secondary">Đang gọi AI chạy Verify (`POST /api/v1/llm/verify`)...</Text>
+                          <Text type="secondary">Đang verify tài liệu...</Text>
                         </div>
                       </Card>
                     ) : verifyResult ? (
@@ -940,11 +1027,13 @@ const JiraPage: React.FC = () => {
                 ),
               },
             ]}
-          />
+          />}
+          </>
         ) : (
           <Empty description="Không tìm thấy thông tin chi tiết task" />
         )}
-      </Drawer>
+      </Drawer>}
+      <RequirementDrawer open={detailDrawerOpen} loading={detailLoading} detailData={detailData} documents={detailData ? documentNamesByIssue[getStringValue(detailData.key)] || [] : []} onClose={() => updateDrawer({ open: false })} planLoading={planLoading} planResult={planResult} verifyLoading={verifyLoading} verifyResult={verifyResult} onPlan={() => void handleCreatePlan()} onVerify={() => void handleVerify()} onApprovePlan={approvePlan} onApproveVerify={approveVerify} />
     </div>
   );
 };

@@ -1,33 +1,16 @@
-import { BodySaleLogin } from "@/types/auth";
-import { message } from "antd";
+import { BodySaleLogin, LoginResponse } from "@/types/auth";
 import http from "./http";
-import { ResLogin } from "@/models";
-import { IUser } from "@/models/user";
 
-const path = `/auth-staff` as const;
+const path = `/auth` as const;
 
 export const authSaleApi = {
-  async login(body: BodySaleLogin): Promise<ResLogin | any> {
-    try {
-      const res = await http.post(`${path}/login`, body);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      console.log(error);
-      const messages = error.data.message;
-      message.error(messages);
-    }
+  async login(body: BodySaleLogin): Promise<LoginResponse> {
+    const { data } = await http.post<LoginResponse>(`${path}/login`, body);
+    return data;
   },
 
-  async me(): Promise<IUser | any> {
-    try {
-      const res = await http.get(`${path}/me`);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      console.log(error);
-      const messages = error.data.message;
-      message.error(messages);
-    }
+  async me() {
+    const { data } = await http.get(`${path}/me`);
+    return data;
   },
 };

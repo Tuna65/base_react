@@ -1,70 +1,79 @@
-import { sidebarSelector } from "@/store/modules/sidebar/selector";
-import React, { useEffect, useState } from "react";
-import { useSelector } from "react-redux";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Layout as AntLayout, Flex, Menu } from "antd";
-import { useTranslation } from "react-i18next";
 import HeaderCustom from "./Header";
-import Text from "@/components/Text";
 import { navItem } from "@/utils/useGlobalService";
-const { Header, Sider, Content } = AntLayout;
+import { sidebarSelector } from "@/store/modules/sidebar/selector";
+import { Layout as AntLayout, Menu } from "antd";
+import { useEffect, useMemo, useState } from "react";
+import { useNavigate, useLocation, Outlet } from "react-router-dom";
+import { useSelector } from "react-redux";
+
+const { Sider, Content } = AntLayout;
+
+const TestFlowMark = () => (
+  <svg width="28" height="28" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <path
+      d="M5 28L13 21L19 25L29 9"
+      stroke="url(#test-flow-logo)"
+      strokeWidth="3"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+    <defs>
+      <linearGradient id="test-flow-logo" x1="5" y1="28" x2="29" y2="9" gradientUnits="userSpaceOnUse">
+        <stop stopColor="#4F46E5" />
+        <stop offset="1" stopColor="#06B6D4" />
+      </linearGradient>
+    </defs>
+  </svg>
+);
 
 const Layout = () => {
-  const { t } = useTranslation();
   const { pathname } = useLocation();
   const navigate = useNavigate();
-  const openSidebar = useSelector(sidebarSelector);
-
+  const collapsed = useSelector(sidebarSelector);
   const [openKeys, setOpenKeys] = useState<string[]>([]);
 
-  const activeKey = React.useMemo(() => {
-    return [`/${pathname.split("/")[1]}`];
-  }, [pathname]);
+  const selectedKeys = useMemo(() => [`/${pathname.split("/")[1]}`], [pathname]);
 
   useEffect(() => {
     setOpenKeys([pathname]);
-  }, []);
+  }, [pathname]);
 
   return (
-    <div>
-      <AntLayout style={{ height: "100vh" }}>
-        <Sider trigger={null} collapsible collapsed={openSidebar} theme="light" className="h-screen overflow-hidden">
-          <Flex
-            className="h-[64px] px-2 border-0 border-b border-solid border-black border-opacity-10"
-            justify="center"
-            align="center"
-          >
-            <Text type="TITLE3" className="text-primary font-bold text-xl tracking-wider">
-              {"TEST"}
-            </Text>
-          </Flex>
-          <Menu
-            mode="inline"
-            selectedKeys={activeKey}
-            openKeys={openKeys}
-            style={{ height: "100%" }}
-            items={navItem(t)}
-            className=""
-            onClick={(i) => navigate(i.key)}
-            onOpenChange={(o) => setOpenKeys(o)}
-            theme="light"
-          />
-        </Sider>
-        <AntLayout style={{ overflow: "hidden" }}>
-          <Header style={{ padding: 0, background: "#fff", boxShadow: "0 2px 8px #f0f1f2", flexShrink: 0, height: 64 }}>
-            <HeaderCustom />
-          </Header>
-          <Content
-            style={{
-              padding: 16,
-              overflowY: "auto",
-            }}
-          >
-            <Outlet />
-          </Content>
-        </AntLayout>
+    <AntLayout className="h-screen overflow-hidden bg-white">
+      <Sider
+        width={220}
+        collapsedWidth={68}
+        trigger={null}
+        collapsible
+        collapsed={collapsed}
+        theme="light"
+        className="app-sidebar !border-r !border-solid !border-[#e5eaf1] !bg-white"
+      >
+        <div className="flex h-[62px] items-center gap-2 border-0 border-b border-solid border-[#e5eaf1] px-5">
+          <TestFlowMark />
+          {!collapsed && <span className="text-base font-bold text-[#071b3b]">TestFlow</span>}
+        </div>
+
+        <Menu
+          mode="inline"
+          selectedKeys={selectedKeys}
+          openKeys={openKeys}
+          items={navItem()}
+          onClick={({ key }) => {
+            if (key === "/jira" || key === "/knowledge" || key === "/requirements") navigate(key);
+          }}
+          onOpenChange={setOpenKeys}
+          className="!mt-2 !border-none !bg-transparent px-3 [&_.ant-menu-item]:!my-1 [&_.ant-menu-item]:!h-10 [&_.ant-menu-item]:!leading-10 [&_.ant-menu-item]:!rounded-xl [&_.ant-menu-item]:!px-3 [&_.ant-menu-item]:!text-[14px] [&_.ant-menu-item]:!font-semibold [&_.ant-menu-item]:!text-[#425779] [&_.ant-menu-item-icon]:!text-[#62718a] [&_.ant-menu-title-content]:!text-[14px] [&_.ant-menu-title-content]:!font-semibold [&_.ant-menu-title-content_*]:!text-[14px] [&_.ant-menu-title-content_*]:!font-semibold [&_.ant-menu-title-content_.anticon]:!text-[6px]"
+        />
+      </Sider>
+
+      <AntLayout className="min-w-0 !bg-white">
+        <HeaderCustom />
+        <Content className="overflow-y-auto bg-[#fbfcfe] p-6">
+          <Outlet />
+        </Content>
       </AntLayout>
-    </div>
+    </AntLayout>
   );
 };
 

@@ -1,7 +1,7 @@
 // import { tokenMethod } from '@/utils/token';
 import JoditEditor from "jodit-react";
 import React, { useMemo, useRef } from "react";
-import { BASE_URL } from "../utils/env";
+import { API_URL } from "@/configs/env";
 
 type Props = {
   value?: string;
@@ -21,7 +21,7 @@ const Editor = (props: Props) => {
       enableDragAndDropFileToEditor: true,
       placeholder: "Enter description...",
       uploader: {
-        url: `${BASE_URL}/upload/single-file`,
+        url: `${API_URL}/upload/single-file`,
         imagesExtensions: ["jpg", "png", "jpeg", "gif"],
         // headers: { Authorization: `Bearer ${tokenMethod?.get()?.accessToken}` },
         withCredentials: false,

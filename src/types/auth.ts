@@ -2,6 +2,10 @@ export interface BodySaleLogin {
   username: string;
 
   password: string;
+}
 
-  shopAlias: string | null;
+export interface LoginResponse {
+  access_token: string;
+  refresh_token: string;
+  user: unknown;
 }

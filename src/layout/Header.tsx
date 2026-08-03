@@ -1,85 +1,78 @@
-import Text from "@/components/Text";
 import { STORAGE } from "@/configs/storage";
-import { useTitle } from "@/hooks/useTitle";
-import { cookieStorageUtil } from "@/service/storage";
+import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
 import { authActions } from "@/store/modules/auth";
 import { userSelector } from "@/store/modules/auth/selector";
-import { sidebarActions } from "@/store/modules/sidebar";
-import { sidebarSelector } from "@/store/modules/sidebar/selector";
 import { PATHNAME } from "@/utils/Pathname";
-import { func } from "@/utils/func";
-import { BellOutlined, MenuFoldOutlined, MenuUnfoldOutlined } from "@ant-design/icons";
-import { Button, Dropdown, Flex, Image, MenuProps, Tooltip } from "antd";
+import {
+  BellOutlined,
+  FolderOpenOutlined,
+  LoginOutlined,
+  UpOutlined,
+} from "@ant-design/icons";
+import { Avatar, Tooltip } from "antd";
 import React from "react";
-import { useTranslation } from "react-i18next";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 
 const HeaderCustom = () => {
-  const { title } = useTitle();
-  const { t } = useTranslation();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const account = useSelector(userSelector);
-  const openSidebar = useSelector(sidebarSelector);
-
-  const toggleCollapsed = () => {
-    dispatch(sidebarActions.toggle(!openSidebar));
-  };
+  const displayName = account?.fullName || account?.username || "Admin User";
 
   const handleLogout = () => {
     cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
+    cookieStorageUtil.remove(STORAGE.REFRESH_TOKEN_KEY);
+    sessionStorageUtil.remove(STORAGE.USER_KEY);
     dispatch(authActions.clear());
-    return navigate(PATHNAME.AUTH.LOGIN);
+    navigate(PATHNAME.AUTH.LOGIN);
   };
 
-  const items: MenuProps["items"] = [
-    {
-      key: "1",
-      label: <Text type="BODY">{account?.fullName || "User"}</Text>,
-    },
-    {
-      key: "2",
-      label: (
-        <Text onClick={handleLogout} type="BODY">
-          {t("Logout")}
-        </Text>
-      ),
-    },
-  ];
-
   return (
-    <div className="px-4 h-[64px] flex items-center border-0 border-l border-solid border-black border-opacity-10">
-      <div className="w-full">
-        <Flex justify="space-between" align="center">
-          <Flex gap={8} align="center">
-            <Button type="text" onClick={toggleCollapsed}>
-              {openSidebar ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
-            </Button>
-            <Text type="TITLE3">{title}</Text>
-          </Flex>
-          <Flex align="center" gap={16}>
-            <Tooltip title={t("Notification")}>
-              <div className="px-2 py-1 rounded-md cursor-pointer hover:bg-gray-100">
-                <BellOutlined />
-              </div>
-            </Tooltip>
-            <Dropdown menu={{ items }} placement="bottom" arrow={{ pointAtCenter: true }}>
-              <div className="flex items-center justify-center gap-2 cursor-pointer">
-                <Image
-                  className="rounded-full overflow-hidden"
-                  width={32}
-                  height={32}
-                  src={func.avatar(account?.fullName, account?.image)}
-                  preview={false}
-                />
-                <Text>{account?.fullName || "User"}</Text>
-              </div>
-            </Dropdown>
-          </Flex>
-        </Flex>
+    <header className="flex h-[62px] shrink-0 items-center justify-between border-0 border-b border-solid border-[#e5eaf1] bg-white px-6">
+      <div className="flex min-w-0 items-center gap-4">
+        <button className="flex h-[48px] w-[322px] items-center gap-3 rounded-xl border border-solid border-[#e5eaf1] bg-white px-3 text-left shadow-[0_1px_2px_rgba(16,24,40,0.03)]">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#ddebfa] text-[#5075aa]">
+            <FolderOpenOutlined />
+          </span>
+          <span className="min-w-0 flex-1 leading-tight">
+            <span className="block text-[10px] font-semibold uppercase tracking-wide text-[#59708f]">Workspace</span>
+            <span className="block truncate text-[13px] font-semibold text-[#081d3d]">Workspace_16/07/2026</span>
+          </span>
+          <UpOutlined className="rotate-180 text-[10px] text-[#7b8aa0]" />
+        </button>
+
+        <span className="h-6 w-px bg-[#e5eaf1]" />
+        <nav className="flex items-center gap-3 text-[13px]">
+          <span className="font-medium text-[#506480]">TestFlow</span>
+          <span className="text-[#9ba7b8]">›</span>
+          <span className="font-semibold text-[#091d3d]">Dashboard</span>
+        </nav>
       </div>
-    </div>
+
+      <div className="flex items-center gap-4">
+        <Tooltip title="Notifications">
+          <button className="flex h-8 w-8 items-center justify-center rounded-lg text-[#53647d] hover:bg-[#f4f7fb]">
+            <BellOutlined />
+          </button>
+        </Tooltip>
+        <div className="flex items-center gap-2 text-left">
+          <Avatar size={36} className="!bg-[#5579ad] !text-xs !font-semibold">AU</Avatar>
+          <span className="hidden leading-tight xl:block">
+            <span className="block text-[13px] font-semibold text-[#081d3d]">{displayName}</span>
+            <span className="block text-[11px] text-[#61738f]">Admin</span>
+          </span>
+        </div>
+        <Tooltip title="Sign out">
+          <button
+            onClick={handleLogout}
+            className="flex h-8 w-8 items-center justify-center rounded-lg text-[#53647d] hover:bg-[#f4f7fb]"
+          >
+            <LoginOutlined className="origin-center scale-[0.75]" />
+          </button>
+        </Tooltip>
+      </div>
+    </header>
   );
 };
 

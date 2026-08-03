@@ -5,6 +5,7 @@ export const configAntdProvider = {
     colorPrimary: "#5932EA",
     borderRadius: 6,
     colorBgContainer: "#fff",
+    fontFamily: '"Geist Variable", "Geist", sans-serif',
   },
 };
 

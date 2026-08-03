@@ -19,13 +19,17 @@ const LazyLayout = (importStatement: () => Promise<any>) => {
   );
 };
 
-export const Preview = () => LazyLayout(() => import("./preview"));
+export const Knowledge = () => LazyLayout(() => import("./preview"));
 export const JiraPage = () => LazyLayout(() => import("./jira"));
 
 export const routerList: TRouterList[] = [
   {
-    path: PATHNAME.PREVIEW,
-    component: <Preview />,
+    path: PATHNAME.KNOWLEDGE,
+    component: <Knowledge />,
+  },
+  {
+    path: PATHNAME.REQUIREMENTS,
+    component: <JiraPage />,
   },
   {
     path: PATHNAME.JIRA.INDEX,
