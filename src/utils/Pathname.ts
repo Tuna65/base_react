@@ -3,6 +3,10 @@ export const PATHNAME = {
   DASHBOARD: "/dashboard",
   SALE: "/ban-hang",
   COMMING_SOON: "/comming-soon",
+  PREVIEW: "/preview",
+  JIRA: {
+    INDEX: "/jira",
+  },
   AUTH: {
     LOGIN: "/dang-nhap",
     REGISTER: "/dang-ky",

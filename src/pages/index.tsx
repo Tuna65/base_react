@@ -1,7 +1,7 @@
+import { TRouterList } from "@/models";
+import { PATHNAME } from "@/utils/Pathname";
 import { Spin } from "antd";
 import { Suspense, lazy } from "react";
-import { PATHNAME } from "@/utils/Pathname";
-import { TRouterList } from "@/models";
 
 const LazyLayout = (importStatement: () => Promise<any>) => {
   const Component = lazy(importStatement);
@@ -18,80 +18,17 @@ const LazyLayout = (importStatement: () => Promise<any>) => {
     </Suspense>
   );
 };
-export const Dashboard = () => LazyLayout(() => import("./dashboard"));
-export const Users = () => LazyLayout(() => import("./nhan-vien"));
-export const Login = () => LazyLayout(() => import("./auth/Login"));
-export const Register = () => LazyLayout(() => import("./auth/Register"));
-export const Shop = () => LazyLayout(() => import("./mock-create-shop"));
-export const NhapHang = () => LazyLayout(() => import("./nhap-hang"));
-export const TaoDonNhapHang = () => LazyLayout(() => import("./nhap-hang/TaoDonNhapHang"));
-export const SanPham = () => LazyLayout(() => import("./san-pham"));
-export const ThemMoiSanPham = () => LazyLayout(() => import("./san-pham/ThemMoiSanPham"));
-export const PhanLoai = () => LazyLayout(() => import("./phan-loai"));
-export const ThemMoiPhanLoai = () => LazyLayout(() => import("./phan-loai/ThemMoiPhanLoai"));
-export const ChinhSuaSanPham = () => LazyLayout(() => import("./san-pham/ChinhSuaSanPham"));
-export const ChiTietSanPham = () => LazyLayout(() => import("./san-pham/ChiTietSanPham"));
-export const Order = () => LazyLayout(() => import("./don-hang"));
-export const ThemMoiDonHang = () => LazyLayout(() => import("./don-hang/ThemMoiDonHang"));
-export const KhachHang = () => LazyLayout(() => import("./khach-hang"));
-export const KhachLe = () => LazyLayout(() => import("./khach-le"));
+
+export const Preview = () => LazyLayout(() => import("./preview"));
+export const JiraPage = () => LazyLayout(() => import("./jira"));
 
 export const routerList: TRouterList[] = [
   {
-    component: <KhachHang />,
-    path: PATHNAME.KHACH_HANG.INDEX,
+    path: PATHNAME.PREVIEW,
+    component: <Preview />,
   },
   {
-    component: <KhachLe />,
-    path: PATHNAME.KHACH_LE.INDEX,
-  },
-  {
-    component: <Order />,
-    path: PATHNAME.ORDER.INDEX,
-  },
-  {
-    component: <ThemMoiDonHang />,
-    path: PATHNAME.ORDER.CREATE,
-  },
-  {
-    component: <ChiTietSanPham />,
-    path: PATHNAME.SAN_PHAM.DETAIL,
-  },
-  {
-    component: <ChinhSuaSanPham />,
-    path: PATHNAME.SAN_PHAM.EDIT,
-  },
-  {
-    component: <ThemMoiPhanLoai />,
-    path: PATHNAME.PHAN_LOAI.CREATE,
-  },
-  {
-    component: <PhanLoai />,
-    path: PATHNAME.PHAN_LOAI.INDEX,
-  },
-  {
-    component: <ThemMoiSanPham />,
-    path: PATHNAME.SAN_PHAM.CREATE,
-  },
-  {
-    component: <SanPham />,
-    path: PATHNAME.SAN_PHAM.INDEX,
-  },
-  {
-    component: <TaoDonNhapHang />,
-    path: PATHNAME.NHAP_HANG.CREATE,
-  },
-  {
-    component: <NhapHang />,
-    path: PATHNAME.NHAP_HANG.INDEX,
-  },
-  {
-    component: <Users />,
-    path: PATHNAME.USER.INDEX,
-  },
-
-  {
-    component: <Dashboard />,
-    path: PATHNAME.DASHBOARD,
+    path: PATHNAME.JIRA.INDEX,
+    component: <JiraPage />,
   },
 ];

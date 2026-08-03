@@ -36,7 +36,7 @@ const HeaderCustom = () => {
   const items: MenuProps["items"] = [
     {
       key: "1",
-      label: <Text type="BODY">{account?.fullName}</Text>,
+      label: <Text type="BODY">{account?.fullName || "User"}</Text>,
     },
     {
       key: "2",
@@ -49,31 +49,31 @@ const HeaderCustom = () => {
   ];
 
   return (
-    <div className="px-2 border-0 border-l border-solid border-black border-opacity-10">
-      <div className="">
-        <Flex justify="space-between">
-          <Flex gap={2} align="center">
-            <Button className="" type="text" onClick={toggleCollapsed}>
+    <div className="px-4 h-[64px] flex items-center border-0 border-l border-solid border-black border-opacity-10">
+      <div className="w-full">
+        <Flex justify="space-between" align="center">
+          <Flex gap={8} align="center">
+            <Button type="text" onClick={toggleCollapsed}>
               {openSidebar ? <MenuUnfoldOutlined /> : <MenuFoldOutlined />}
             </Button>
             <Text type="TITLE3">{title}</Text>
           </Flex>
           <Flex align="center" gap={16}>
             <Tooltip title={t("Notification")}>
-              <div className="px-2 rounded-md  cursor-pointer">
+              <div className="px-2 py-1 rounded-md cursor-pointer hover:bg-gray-100">
                 <BellOutlined />
               </div>
             </Tooltip>
             <Dropdown menu={{ items }} placement="bottom" arrow={{ pointAtCenter: true }}>
-              <div className="flex items-center justify-center gap-2">
+              <div className="flex items-center justify-center gap-2 cursor-pointer">
                 <Image
-                  className="rounded-lg cursor-pointer mb-8"
+                  className="rounded-full overflow-hidden"
                   width={32}
                   height={32}
                   src={func.avatar(account?.fullName, account?.image)}
                   preview={false}
                 />
-                <Text>{account?.fullName}</Text>
+                <Text>{account?.fullName || "User"}</Text>
               </div>
             </Dropdown>
           </Flex>

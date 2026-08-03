@@ -1,9 +1,8 @@
-import logo from "@/assets/images/naat_logo.jpg";
 import { sidebarSelector } from "@/store/modules/sidebar/selector";
 import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { Layout as AntLayout, Flex, Image, Menu } from "antd";
+import { Layout as AntLayout, Flex, Menu } from "antd";
 import { useTranslation } from "react-i18next";
 import HeaderCustom from "./Header";
 import Text from "@/components/Text";
@@ -35,15 +34,9 @@ const Layout = () => {
             justify="center"
             align="center"
           >
-            {!openSidebar ? (
-              <Flex className="">
-                <Image className="rounded-lg" width={80} height={40} src={logo} />
-              </Flex>
-            ) : (
-              <Text type="TITLE3" className="text-primary font-bold ">
-                {"QLBH"}
-              </Text>
-            )}
+            <Text type="TITLE3" className="text-primary font-bold text-xl tracking-wider">
+              {"TEST"}
+            </Text>
           </Flex>
           <Menu
             mode="inline"
@@ -54,12 +47,11 @@ const Layout = () => {
             className=""
             onClick={(i) => navigate(i.key)}
             onOpenChange={(o) => setOpenKeys(o)}
-            // inlineCollapsed={openSidebar}
             theme="light"
           />
         </Sider>
         <AntLayout style={{ overflow: "hidden" }}>
-          <Header style={{ padding: 0, background: "#fff", boxShadow: "0 2px 8px #f0f1f2", flexShrink: 0 }} className="pb-3">
+          <Header style={{ padding: 0, background: "#fff", boxShadow: "0 2px 8px #f0f1f2", flexShrink: 0, height: 64 }}>
             <HeaderCustom />
           </Header>
           <Content

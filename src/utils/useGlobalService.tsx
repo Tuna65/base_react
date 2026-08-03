@@ -137,83 +137,13 @@ export default useGlobalService;
 
 export const navItem = (t: any): MenuProps["items"] => [
   {
-    key: PATHNAME.ORDER.INDEX,
+    key: PATHNAME.PREVIEW,
+    icon: React.createElement(IconProduct),
+    label: `Document`,
+  },
+  {
+    key: PATHNAME.JIRA.INDEX,
     icon: React.createElement(IconSale),
-    label: `Đơn hàng`,
+    label: `Jira`,
   },
-  // {
-  //   key: PATHNAME.DASHBOARD,
-  //   icon: React.createElement(IconPieChart),
-  //   label: `Dashboard`,
-  // },
-  // {
-  //   key: PATHNAME.ORDER.INDEX,
-  //   icon: React.createElement(IconOrder),
-  //   label: <Text type="HEADLINE">{t("Đơn hàng")}</Text>,
-  // children: [
-  //   {
-  //     key: PATHNAME.ORDER.INDEX,
-  //     label: <Text type="HEADLINE">{"Order"}</Text>,
-  //   },
-  // ],
-  // },
-  {
-    key: "PATHNAME.PRODUCT",
-    icon: React.createElement(IconProduct),
-    label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
-    children: [
-      {
-        key: PATHNAME.SAN_PHAM.INDEX,
-        label: <Text type="HEADLINE">{t("Sản phẩm")}</Text>,
-      },
-      {
-        key: PATHNAME.PHAN_LOAI.INDEX,
-        label: <Text type="HEADLINE">{t("Nhóm sản phẩm")}</Text>,
-      },
-    ],
-  },
-  {
-    key: "PATHNAME.INVENTORIES",
-    icon: React.createElement(IconProduct),
-    label: <Text type="HEADLINE">{t("Kho")}</Text>,
-    children: [
-      {
-        key: PATHNAME.NHAP_HANG.INDEX,
-        label: <Text type="HEADLINE">{t("Nhập hàng")}</Text>,
-      },
-    ],
-  },
-  {
-    key: "PATHNAME.USER",
-    icon: React.createElement(IconAccount),
-    label: <Text type="HEADLINE">{t("Tài khoản")}</Text>,
-    children: [
-      {
-        key: PATHNAME.USER.INDEX,
-        label: <Text type="HEADLINE">{t("Nhân viên")}</Text>,
-      },
-      {
-        key: PATHNAME.KHACH_HANG.INDEX,
-        label: <Text type="HEADLINE">{t("Khách hàng")}</Text>,
-      },
-      {
-        key: PATHNAME.KHACH_LE.INDEX,
-        label: <Text type="HEADLINE">{t("Khách lẻ")}</Text>,
-      },
-    ],
-  },
-  // {
-  //   key: PATHNAME.LOCATION.INDEX,
-  //   icon: React.createElement(IconLocation),
-  //   label: <Text type="HEADLINE">{t("Chi nhánh")}</Text>,
-  // },
-  // {
-  //   key: PATHNAME.ROLE.INDEX,
-  //   icon: (
-  //     <div className="opacity-30">
-  //       <IconRole />
-  //     </div>
-  //   ),
-  //   label: <Text type="HEADLINE">{t("Vai trò")}</Text>,
-  // },
 ];
