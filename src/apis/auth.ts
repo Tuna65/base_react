@@ -1,5 +1,6 @@
 import { BodySaleLogin, LoginResponse } from "@/types/auth";
-import http from "./http";
+import http from "./gateway-http";
+import { IUser } from "@/models/user";
 
 const path = `/auth` as const;
 
@@ -10,7 +11,8 @@ export const authSaleApi = {
   },
 
   async me() {
-    const { data } = await http.get(`${path}/me`);
+    const { data } = await http.get<IUser>(`${path}/me`);
     return data;
   },
+  async logout() { await http.post(`${path}/logout`); },
 };

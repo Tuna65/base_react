@@ -12,6 +12,7 @@ import Login from "./pages/auth/Login";
 import ProtectedRoute from "./layout/ProtectedRoute";
 
 const pageTitles: Record<string, string> = {
+  [PATHNAME.SETTING]: "Settings",
   [PATHNAME.AUTH.LOGIN]: "Login",
   [PATHNAME.KNOWLEDGE]: "KnowledgeHub",
   [PATHNAME.REQUIREMENTS]: "Requirements",
@@ -22,7 +23,7 @@ function PageTitle() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    document.title = `${pageTitles[pathname] || "TestFlow"} | TestFlow`;
+    document.title = `${pageTitles[pathname] || "AI solution"} | AI solution`;
   }, [pathname]);
 
   return null;

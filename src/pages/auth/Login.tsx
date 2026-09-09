@@ -1,177 +1,58 @@
-import { STORAGE } from "@/configs/storage";
-import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
-import { PATHNAME } from "@/utils/Pathname";
-import { Button, Checkbox, Form, Input, Tabs } from "antd";
-import { message } from "antd";
-import axios from "axios";
-import React, { useEffect, useState } from "react";
-import { useTranslation } from "react-i18next";
+import { useEffect, useState } from "react";
+import { Alert, Button, Checkbox, Form, Input } from "antd";
+import { ArrowRightOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useNavigate } from "react-router-dom";
-import useAuthService from "./useAuthService";
+import axios from "axios";
 import { authSaleApi } from "@/apis/auth";
-import useApi from "@/apis/useApi";
+import { saveAuth } from "@/apis/gateway-http";
+import { STORAGE } from "@/configs/storage";
+import { cookieStorageUtil } from "@/service/storage";
+import { PATHNAME } from "@/utils/Pathname";
 import { BodySaleLogin } from "@/types/auth";
 
-// ─── Logo SVG ────────────────────────────────────────────────────────────────
-
-const TestFlowLogo = () => (
-  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-    <path
-      d="M5 28 L13 16 L20 24 L27 10 L35 20"
-      stroke="url(#logoGrad)"
-      strokeWidth="2.8"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      fill="none"
-    />
-    <defs>
-      <linearGradient id="logoGrad" x1="5" y1="28" x2="35" y2="10" gradientUnits="userSpaceOnUse">
-        <stop offset="0%" stopColor="#6366f1" />
-        <stop offset="100%" stopColor="#06b6d4" />
-      </linearGradient>
-    </defs>
-  </svg>
-);
-
-// ─── Component ────────────────────────────────────────────────────────────────
-
-const Login = () => {
-  const { t } = useTranslation();
-  const [form] = Form.useForm();
-  const { rulesForm } = useAuthService();
+export default function Login() {
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("ldap");
-  const { execute: login, loading } = useApi(authSaleApi.login, {
-    onFailed: (error) => {
-      const errorMessage = axios.isAxiosError(error)
-        ? error.response?.data?.message
-        : "Unable to sign in. Please try again.";
-      message.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
-    },
-  });
-  const username = Form.useWatch("username", form);
-  const password = Form.useWatch("password", form);
-  const canSignIn = Boolean(username?.trim() && password);
-
-  const onFinish = async (values: BodySaleLogin) => {
-    try {
-      const response = await login(values);
-      if (!response) return;
-      cookieStorageUtil.set(response.access_token, STORAGE.TOKEN_KEY, { expires: 1 });
-      cookieStorageUtil.set(response.refresh_token, STORAGE.REFRESH_TOKEN_KEY, { expires: 7 });
-      sessionStorageUtil.remove(STORAGE.USER_KEY);
-      navigate(PATHNAME.REQUIREMENTS);
-    } catch (error) {
-      const errorMessage = axios.isAxiosError(error)
-        ? error.response?.data?.message
-        : "Unable to sign in. Please try again.";
-      message.error(Array.isArray(errorMessage) ? errorMessage[0] : errorMessage);
-    }
-  };
-
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [form] = Form.useForm<BodySaleLogin & { remember: boolean }>();
   useEffect(() => {
-    const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
-    if (token) navigate(PATHNAME.REQUIREMENTS);
+    if (cookieStorageUtil.get(STORAGE.TOKEN_KEY) || cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY)) navigate(PATHNAME.SETTING, { replace: true });
   }, [navigate]);
 
-  const tabItems = [
-    { key: "ldap", label: "LDAP" },
-    { key: "standard", label: "Standard" },
-  ];
+  async function onFinish(values: BodySaleLogin & { remember: boolean }) {
+    setLoading(true);
+    setError("");
+    try {
+      const result = await authSaleApi.login({ username: values.username.trim(), password: values.password });
+      saveAuth(result, values.remember);
+      navigate(PATHNAME.SETTING, { replace: true });
+    } catch (failure) {
+      const detail: unknown = axios.isAxiosError(failure) ? failure.response?.data?.message : undefined;
+      setError(typeof detail === "string" ? detail : "Không thể đăng nhập. Kiểm tra kết nối và thử lại.");
+    } finally { setLoading(false); }
+  }
 
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-white font-sans">
-      <div className="box-border min-h-[445px] w-[386px] rounded-[11px] border border-[#e4e7ec] bg-white p-8 shadow-[0_1px_3px_rgba(16,24,40,0.16)]">
-          {/* Logo & App Name */}
-          <div className="mb-[19px] flex flex-col items-center gap-[7px]">
-            <TestFlowLogo />
-            <h1 className="m-0 text-lg font-bold tracking-[-0.2px] text-[#020b2d]">TestFlow</h1>
-          </div>
-
-          {/* Tabs */}
-          <Tabs
-            className="w-full [&_.ant-tabs-nav]:!mb-5 [&_.ant-tabs-nav-list]:w-full [&_.ant-tabs-nav::before]:!border-b-[#e2e8f0] [&_.ant-tabs-tab]:!flex-1 [&_.ant-tabs-tab]:!justify-center [&_.ant-tabs-tab]:!px-0 [&_.ant-tabs-tab]:!pb-2 [&_.ant-tabs-tab]:!pt-1.5 [&_.ant-tabs-tab]:!text-sm [&_.ant-tabs-tab]:!font-semibold [&_.ant-tabs-tab]:!text-[#536582] [&_.ant-tabs-tab-active_.ant-tabs-tab-btn]:!text-[#5b83bb] [&_.ant-tabs-ink-bar]:!h-0.5 [&_.ant-tabs-ink-bar]:!bg-[#4f73a8]"
-            activeKey={activeTab}
-            onChange={setActiveTab}
-            items={tabItems}
-          />
-
-          {/* Form */}
-          <Form
-            className="[&_.ant-form-item-label>label]:!text-sm [&_.ant-form-item-label>label]:!font-semibold [&_.ant-form-item-label>label]:!text-[#020b2d]"
-            layout="vertical"
-            onFinish={onFinish}
-            form={form}
-            initialValues={{ remember: true }}
-          >
-            <Form.Item
-              label={activeTab === "standard" ? "Username or primary email" : t("Username")}
-              name="username"
-              rules={
-                activeTab === "standard"
-                  ? [{ required: true, message: "Username or primary email is required" }]
-                  : rulesForm.username
-              }
-              className="!mb-4"
-            >
-              <Input
-                className="!min-h-9 !rounded-md !border-[#cbd5e1] !px-3 !py-1.5 !text-sm !text-[#1e293b] !shadow-[0_1px_2px_rgba(16,24,40,0.08)] placeholder:!text-[#66799a] hover:!border-[#5b83bb] focus:!border-[#5b83bb] focus:!shadow-[0_0_0_3px_rgba(91,131,187,0.12)]"
-                placeholder={
-                  activeTab === "ldap"
-                    ? t("Your LDAP username")
-                    : "username or you@company.com"
-                }
-              />
-            </Form.Item>
-
-            <Form.Item
-              label={t("Password")}
-              name="password"
-              rules={rulesForm.password}
-              className="!mb-3"
-            >
-              <Input.Password
-                className="!min-h-9 !rounded-md !border-[#cbd5e1] !px-3 !py-1.5 !text-sm !text-[#1e293b] !shadow-[0_1px_2px_rgba(16,24,40,0.08)] hover:!border-[#5b83bb] focus-within:!border-[#5b83bb] focus-within:!shadow-[0_0_0_3px_rgba(91,131,187,0.12)] [&_.ant-input]:!min-h-0 [&_.ant-input]:!border-0 [&_.ant-input]:!bg-transparent [&_.ant-input]:!p-0 [&_.ant-input]:!text-sm [&_.ant-input]:!shadow-none [&_.ant-input]:placeholder:!text-[#66799a]"
-                placeholder={t("Enter your password")}
-              />
-            </Form.Item>
-
-            {/* Remember me */}
-            <Form.Item className="!mb-5">
-              <div className="flex w-full items-center justify-between">
-                <Form.Item name="remember" valuePropName="checked" noStyle>
-                  <Checkbox className="!text-sm !text-[#020b2d] [&_.ant-checkbox-checked_.ant-checkbox-inner]:!border-[#5b83bb] [&_.ant-checkbox-checked_.ant-checkbox-inner]:!bg-[#5b83bb]">
-                    {t("Remember me")}
-                  </Checkbox>
-                </Form.Item>
-                {activeTab === "standard" && (
-                  <a className="text-sm text-[#5b83bb] hover:text-[#4f73a8] hover:underline" href="#forgot-password">
-                    Forgot your password?
-                  </a>
-                )}
-              </div>
-            </Form.Item>
-
-            {/* Sign in button */}
-            <Form.Item className="!mb-0">
-              <Button
-                type="primary"
-                loading={loading}
-                disabled={!canSignIn || loading}
-                htmlType="submit"
-                className={`!h-9 !w-full !rounded-md !border-none !text-sm !font-semibold !tracking-[0.3px] transition ${
-                  canSignIn
-                    ? "!bg-[#5b83bb] hover:!bg-[#4f73a8] hover:-translate-y-px"
-                    : "!bg-[#abc0da] hover:!bg-[#abc0da]"
-                }`}
-              >
-                {t("Sign in")}
-              </Button>
-            </Form.Item>
-          </Form>
+  return <main className="flex min-h-screen items-center justify-center bg-[#f5f7fb] px-5 py-12">
+    <section className="w-full max-w-[440px] rounded-2xl border border-solid border-[#e2e8f0] bg-white px-7 py-9 shadow-[0_12px_48px_rgba(15,23,42,0.06)] sm:px-10">
+      <div className="mb-8 text-center">
+        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl bg-[#153e75] text-white" aria-hidden="true">
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M14 3L17 11L25 14L17 17L14 25L11 17L3 14L11 11L14 3Z" stroke="currentColor" strokeWidth="1.7" strokeLinejoin="round" /></svg>
+        </div>
+        <h1 className="text-[26px] font-semibold tracking-tight text-[#112b4f]">AI solution</h1>
+        <p className="mt-2 text-sm text-slate-500">Đăng nhập để quản lý agent và cấu hình AI.</p>
       </div>
-    </div>
-  );
-};
-
-export default React.memo(Login);
+      {error && <Alert className="!mb-5" type="error" showIcon title={error} />}
+      <Form form={form} layout="vertical" onFinish={onFinish} initialValues={{ remember: true }} disabled={loading} requiredMark={false}>
+        <Form.Item name="username" label="Username hoặc email" rules={[{ required: true, whitespace: true, message: "Nhập username hoặc email." }]}>
+          <Input size="large" prefix={<UserOutlined className="!mr-1 !text-slate-400" />} placeholder="username hoặc email@example.com" autoComplete="username" autoFocus />
+        </Form.Item>
+        <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, message: "Nhập mật khẩu." }]}>
+          <Input.Password size="large" prefix={<LockOutlined className="!mr-1 !text-slate-400" />} placeholder="Nhập mật khẩu" autoComplete="current-password" />
+        </Form.Item>
+        <Form.Item name="remember" valuePropName="checked"><Checkbox>Ghi nhớ đăng nhập</Checkbox></Form.Item>
+        <Button type="primary" htmlType="submit" size="large" block loading={loading} className="!h-11 !bg-[#153e75] !font-semibold" icon={<ArrowRightOutlined />} iconPlacement="end">Đăng nhập</Button>
+      </Form>
+      <p className="mt-6 text-center text-xs leading-5 text-slate-500">Sử dụng tài khoản được cấp để truy cập hệ thống.</p>
+    </section>
+  </main>;
+}

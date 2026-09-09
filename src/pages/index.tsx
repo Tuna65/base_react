@@ -21,8 +21,10 @@ const LazyLayout = (importStatement: () => Promise<any>) => {
 
 export const Knowledge = () => LazyLayout(() => import("./preview"));
 export const JiraPage = () => LazyLayout(() => import("./jira"));
+export const SettingPage = () => LazyLayout(() => import("./setting"));
 
 export const routerList: TRouterList[] = [
+  { path: PATHNAME.SETTING, component: <SettingPage /> },
   {
     path: PATHNAME.KNOWLEDGE,
     component: <Knowledge />,

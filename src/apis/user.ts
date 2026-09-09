@@ -1,68 +1,12 @@
-import { ResPagination } from "@/models";
-import { QueryStaff, Staff } from "@/types/staff";
-import { message } from "antd";
-import http from "./http";
-
-const path = `/user` as const;
-
+import gatewayHttp from "./gateway-http";
+import { IUser } from "@/models/user";
+export interface CreateUser { username: string; email: string; password: string; fullName?: string; role?: "admin" | "user" }
 export const userApi = {
-  async query(params?: QueryStaff): Promise<ResPagination<Staff> | any> {
-    try {
-      const res = await http.get(`${path}`, { params });
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
-
-  async create(body: Staff): Promise<Staff | any> {
-    try {
-      const res = await http.post(`${path}`, body);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
-
-  async update( body: Staff): Promise<Staff | any> {
-    try {
-      const res = await http.put(`${path}`, body);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
-
-  async changePassword(body: any): Promise<any | any> {
-    try {
-      const res = await http.put(`${path}/change-password`, body);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
-
-  async detail(id: string): Promise<Staff | any> {
-    try {
-      const res = await http.get(`${path}/${id}`);
-      if (res?.status > 201) throw Error(res as any);
-      return res;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
-
-  async delete(id: string): Promise<any | any> {
-    try {
-      const res = await http.delete(`${path}/${id}`);
-      if (res?.status !== 200) throw Error(res as any);
-      return res.data;
-    } catch (error: any) {
-      message.error(error?.data?.message ?? error?.data?.message[0]);
-    }
-  },
+  async query() { return (await gatewayHttp.get<IUser[]>("/users")).data; },
+  async detail(id: number) { return (await gatewayHttp.get<IUser>(`/users/${id}`)).data; },
+  async create(body: CreateUser) { return (await gatewayHttp.post<IUser>("/users", body)).data; },
+  async update(id: number, body: Partial<CreateUser> & { status?: "ACTIVE" | "INACTIVE" }) { return (await gatewayHttp.patch<IUser>(`/users/${id}`, body)).data; },
+  async delete(id: number) { await gatewayHttp.delete(`/users/${id}`); },
+  async me() { return (await gatewayHttp.get<IUser>("/users/me")).data; },
+  async updateMe(body: Partial<Omit<CreateUser, "role">>) { return (await gatewayHttp.patch<IUser>("/users/me", body)).data; },
 };

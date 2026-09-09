@@ -1,56 +1,46 @@
+import { useEffect, useState } from "react";
+import { Alert, Button, Spin } from "antd";
+import { Outlet, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import axios from "axios";
 import { authSaleApi } from "@/apis/auth";
-import useApi from "@/apis/useApi";
+import { clearAuth } from "@/apis/gateway-http";
 import { STORAGE } from "@/configs/storage";
 import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
 import { authActions } from "@/store/modules/auth";
 import { PATHNAME } from "@/utils/Pathname";
-import { Spin } from "antd";
-import React from "react";
-import { useDispatch } from "react-redux";
-import { Outlet } from "react-router";
-import { useNavigate } from "react-router-dom";
 
-const ProtectedRoute = () => {
-  const naviage = useNavigate();
+export default function ProtectedRoute() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [loading, setLoading] = React.useState(true);
-  const { execute: requestCurrentUser } = useApi<unknown>(authSaleApi.me);
-
-  React.useEffect(() => {
-    const token = cookieStorageUtil.get(STORAGE.TOKEN_KEY);
-    const cachedUser = sessionStorageUtil.get(STORAGE.USER_KEY);
-
-    if (!token) {
-      naviage(PATHNAME.AUTH.LOGIN, { replace: true });
-      return;
-    }
-
-    if (cachedUser) {
-      dispatch(authActions.setUser(cachedUser));
-      setLoading(false);
-      return;
-    }
-
-    const loadUser = async () => {
-      try {
-        const user = await requestCurrentUser();
-        if (!user) throw new Error("Unable to load the current user");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+  const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    let active = true;
+    const expired = () => {
+      clearAuth();
+      dispatch(authActions.clear());
+      navigate(PATHNAME.AUTH.LOGIN, { replace: true });
+    };
+    window.addEventListener("auth:expired", expired);
+    if (!cookieStorageUtil.get(STORAGE.TOKEN_KEY) && !cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY)) expired();
+    else {
+      setLoading(true);
+      setError(false);
+      void authSaleApi.me().then((user) => {
+        if (!active) return;
         sessionStorageUtil.set(user, STORAGE.USER_KEY);
         dispatch(authActions.setUser(user));
-      } catch {
-        cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
-        cookieStorageUtil.remove(STORAGE.REFRESH_TOKEN_KEY);
-        sessionStorageUtil.remove(STORAGE.USER_KEY);
-        naviage(PATHNAME.AUTH.LOGIN, { replace: true });
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    void loadUser();
-  }, [dispatch, naviage, requestCurrentUser]);
-
-  return <div>{loading ? <Spin size="small" /> : <Outlet />}</div>;
-};
-
-export default ProtectedRoute;
+      }).catch((failure) => {
+        if (!active) return;
+        if (axios.isAxiosError(failure) && [401, 403].includes(failure.response?.status ?? 0)) expired();
+        else setError(true);
+      }).finally(() => { if (active) setLoading(false); });
+    }
+    return () => { active = false; window.removeEventListener("auth:expired", expired); };
+  }, [dispatch, navigate, retry]);
+  if (loading) return <div className="flex min-h-screen items-center justify-center"><Spin size="large" /></div>;
+  if (error) return <div className="mx-auto mt-12 max-w-lg"><Alert type="error" title="Không thể xác minh phiên đăng nhập" description="Kiểm tra kết nối gateway và thử lại." action={<Button onClick={() => setRetry((value) => value + 1)}>Thử lại</Button>} /></div>;
+  return <Outlet />;
+}

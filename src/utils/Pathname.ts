@@ -1,4 +1,5 @@
 export const PATHNAME = {
+  SETTING: "/setting",
   HOME: "/home",
   DASHBOARD: "/dashboard",
   SALE: "/sale",

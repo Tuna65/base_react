@@ -51,7 +51,7 @@ const Layout = () => {
       >
         <div className="flex h-[62px] items-center gap-2 border-0 border-b border-solid border-[#e5eaf1] px-5">
           <TestFlowMark />
-          {!collapsed && <span className="text-base font-bold text-[#071b3b]">TestFlow</span>}
+          {!collapsed && <span className="text-base font-bold text-[#071b3b]">AI solution</span>}
         </div>
 
         <Menu
@@ -60,7 +60,7 @@ const Layout = () => {
           openKeys={openKeys}
           items={navItem()}
           onClick={({ key }) => {
-            if (key === "/jira" || key === "/knowledge" || key === "/requirements") navigate(key);
+            if (["/jira", "/knowledge", "/requirements", "/setting"].includes(key)) navigate(key);
           }}
           onOpenChange={setOpenKeys}
           className="!mt-2 !border-none !bg-transparent px-3 [&_.ant-menu-item]:!my-1 [&_.ant-menu-item]:!h-10 [&_.ant-menu-item]:!leading-10 [&_.ant-menu-item]:!rounded-xl [&_.ant-menu-item]:!px-3 [&_.ant-menu-item]:!text-[14px] [&_.ant-menu-item]:!font-semibold [&_.ant-menu-item]:!text-[#425779] [&_.ant-menu-item-icon]:!text-[#62718a] [&_.ant-menu-title-content]:!text-[14px] [&_.ant-menu-title-content]:!font-semibold [&_.ant-menu-title-content_*]:!text-[14px] [&_.ant-menu-title-content_*]:!font-semibold [&_.ant-menu-title-content_.anticon]:!text-[6px]"

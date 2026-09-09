@@ -194,8 +194,8 @@ export const navItem = (): MenuProps["items"] => [
     label: expandableLabel("Reports"),
   },
   {
-    key: "settings",
+    key: PATHNAME.SETTING,
     icon: React.createElement(SettingOutlined),
-    label: expandableLabel("Settings"),
+    label: "Settings",
   },
 ];

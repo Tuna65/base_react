@@ -1,3 +1,5 @@
+import { IUser } from "@/models/user";
+
 export interface BodySaleLogin {
   username: string;
 
@@ -7,5 +9,6 @@ export interface BodySaleLogin {
 export interface LoginResponse {
   access_token: string;
   refresh_token: string;
-  user: unknown;
+  expires_in: number;
+  user: IUser;
 }

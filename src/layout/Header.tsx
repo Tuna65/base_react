@@ -1,5 +1,5 @@
-import { STORAGE } from "@/configs/storage";
-import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
+import { authSaleApi } from "@/apis/auth";
+import { clearAuth } from "@/apis/gateway-http";
 import { authActions } from "@/store/modules/auth";
 import { userSelector } from "@/store/modules/auth/selector";
 import { PATHNAME } from "@/utils/Pathname";
@@ -20,10 +20,9 @@ const HeaderCustom = () => {
   const account = useSelector(userSelector);
   const displayName = account?.fullName || account?.username || "Admin User";
 
-  const handleLogout = () => {
-    cookieStorageUtil.remove(STORAGE.TOKEN_KEY);
-    cookieStorageUtil.remove(STORAGE.REFRESH_TOKEN_KEY);
-    sessionStorageUtil.remove(STORAGE.USER_KEY);
+  const handleLogout = async () => {
+    try { await authSaleApi.logout(); } catch { /* Always clear local credentials. */ }
+    clearAuth();
     dispatch(authActions.clear());
     navigate(PATHNAME.AUTH.LOGIN);
   };
@@ -44,7 +43,7 @@ const HeaderCustom = () => {
 
         <span className="h-6 w-px bg-[#e5eaf1]" />
         <nav className="flex items-center gap-3 text-[13px]">
-          <span className="font-medium text-[#506480]">TestFlow</span>
+          <span className="font-medium text-[#506480]">AI solution</span>
           <span className="text-[#9ba7b8]">›</span>
           <span className="font-semibold text-[#091d3d]">Dashboard</span>
         </nav>
@@ -60,7 +59,7 @@ const HeaderCustom = () => {
           <Avatar size={36} className="!bg-[#5579ad] !text-xs !font-semibold">AU</Avatar>
           <span className="hidden leading-tight xl:block">
             <span className="block text-[13px] font-semibold text-[#081d3d]">{displayName}</span>
-            <span className="block text-[11px] text-[#61738f]">Admin</span>
+            <span className="block text-[11px] text-[#61738f]">{account?.role === "admin" ? "Admin" : "User"}</span>
           </span>
         </div>
         <Tooltip title="Sign out">
