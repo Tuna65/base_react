@@ -3,7 +3,7 @@ import Text from "@/components/Text";
 import { STORAGE } from "@/configs/storage";
 import { cookieStorageUtil } from "@/service/storage";
 import { PATHNAME } from "@/utils/Pathname";
-import { Button, Flex, Form, Input } from "antd";
+import { Button, Flex, Form, Input } from "@/components";
 import React, { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";

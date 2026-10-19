@@ -1,23 +1,44 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Checkbox, Form, Input } from "antd";
-import { ArrowRightOutlined, LockOutlined, UserOutlined } from "@ant-design/icons";
-import { useNavigate } from "react-router-dom";
+import { Alert, Button, Checkbox, Form, Input } from "@/components";
+import { ArrowRightOutlined, LockOutlined, UserOutlined } from "@/components/Icons";
 import axios from "axios";
 import { authSaleApi } from "@/apis/auth";
-import { saveAuth } from "@/apis/gateway-http";
-import { STORAGE } from "@/configs/storage";
-import { cookieStorageUtil } from "@/service/storage";
-import { PATHNAME } from "@/utils/Pathname";
+import { clearAuth, saveAuth } from "@/apis/gateway-http";
 import { BodySaleLogin } from "@/types/auth";
+import { useNavigate } from "react-router-dom";
+import { PATHNAME } from "@/utils/Pathname";
+import { STORAGE } from "@/configs/storage";
+import { cookieStorageUtil, sessionStorageUtil } from "@/service/storage";
 
 export default function Login() {
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [form] = Form.useForm<BodySaleLogin & { remember: boolean }>();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    if (cookieStorageUtil.get(STORAGE.TOKEN_KEY) || cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY)) navigate(PATHNAME.SETTING, { replace: true });
+    const controller = new AbortController();
+    const expired = () => {
+      setError("Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.");
+    };
+    window.addEventListener("auth:expired", expired);
+    if (cookieStorageUtil.get(STORAGE.TOKEN_KEY) || cookieStorageUtil.get(STORAGE.REFRESH_TOKEN_KEY)) {
+      setLoading(true);
+      void authSaleApi.me(controller.signal).then((detail) => {
+        if (controller.signal.aborted) return;
+        sessionStorageUtil.set(detail, STORAGE.USER_KEY);
+        navigate(PATHNAME.DASHBOARD, { replace: true });
+      }).catch((failure) => {
+        if (controller.signal.aborted) return;
+        if (axios.isAxiosError(failure) && [401, 403].includes(failure.response?.status ?? 0)) clearAuth();
+        setError("Không thể xác minh phiên đăng nhập. Vui lòng thử lại.");
+      }).finally(() => { if (!controller.signal.aborted) setLoading(false); });
+    }
+    return () => {
+      controller.abort();
+      window.removeEventListener("auth:expired", expired);
+    };
   }, [navigate]);
+  const [form] = Form.useForm<BodySaleLogin & { remember: boolean }>();
 
   async function onFinish(values: BodySaleLogin & { remember: boolean }) {
     setLoading(true);
@@ -25,7 +46,10 @@ export default function Login() {
     try {
       const result = await authSaleApi.login({ username: values.username.trim(), password: values.password });
       saveAuth(result, values.remember);
-      navigate(PATHNAME.SETTING, { replace: true });
+      const detail = await authSaleApi.me();
+      sessionStorageUtil.set(detail, STORAGE.USER_KEY);
+      navigate(PATHNAME.DASHBOARD, { replace: true });
+      form.resetFields(["password"]);
     } catch (failure) {
       const detail: unknown = axios.isAxiosError(failure) ? failure.response?.data?.message : undefined;
       setError(typeof detail === "string" ? detail : "Không thể đăng nhập. Kiểm tra kết nối và thử lại.");

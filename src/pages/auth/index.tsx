@@ -1,5 +1,5 @@
 import { IconFrameLogin } from "@/assets/Icon";
-import { Flex } from "antd";
+import { Flex } from "@/components";
 import React from "react";
 import { Outlet } from "react-router-dom";
 

@@ -10,8 +10,8 @@ import {
   PlayCircleOutlined,
   RightOutlined,
   SettingOutlined,
-} from "@ant-design/icons";
-import { MenuProps } from "antd";
+} from "@/components/Icons";
+import { MenuProps } from "@/components";
 import React from "react";
 import { useTranslation } from "react-i18next";
 

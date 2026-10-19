@@ -1,4 +1,4 @@
-import { message } from "antd";
+import { message } from "@/components";
 import moment from "moment";
 
 export const func = {

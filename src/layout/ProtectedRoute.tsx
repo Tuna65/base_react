@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Alert, Button, Spin } from "antd";
+import { Alert, Button, Spin } from "@/components";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import axios from "axios";
@@ -28,19 +28,43 @@ export default function ProtectedRoute() {
     else {
       setLoading(true);
       setError(false);
-      void authSaleApi.me().then((user) => {
-        if (!active) return;
-        sessionStorageUtil.set(user, STORAGE.USER_KEY);
-        dispatch(authActions.setUser(user));
-      }).catch((failure) => {
-        if (!active) return;
-        if (axios.isAxiosError(failure) && [401, 403].includes(failure.response?.status ?? 0)) expired();
-        else setError(true);
-      }).finally(() => { if (active) setLoading(false); });
+      void authSaleApi
+        .me()
+        .then((user) => {
+          if (!active) return;
+          sessionStorageUtil.set(user, STORAGE.USER_KEY);
+          dispatch(authActions.setUser(user));
+        })
+        .catch((failure) => {
+          if (!active) return;
+          if (axios.isAxiosError(failure) && [401, 403].includes(failure.response?.status ?? 0)) expired();
+          else setError(true);
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
     }
-    return () => { active = false; window.removeEventListener("auth:expired", expired); };
+    return () => {
+      active = false;
+      window.removeEventListener("auth:expired", expired);
+    };
   }, [dispatch, navigate, retry]);
-  if (loading) return <div className="flex min-h-screen items-center justify-center"><Spin size="large" /></div>;
-  if (error) return <div className="mx-auto mt-12 max-w-lg"><Alert type="error" title="Không thể xác minh phiên đăng nhập" description="Kiểm tra kết nối gateway và thử lại." action={<Button onClick={() => setRetry((value) => value + 1)}>Thử lại</Button>} /></div>;
+  if (loading)
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Spin size="large" />
+      </div>
+    );
+  if (error)
+    return (
+      <div className="mt-12 box-border w-full max-w-none px-4">
+        <Alert
+          type="error"
+          title="Không thể xác minh phiên đăng nhập"
+          description="Kiểm tra kết nối gateway và thử lại."
+          action={<Button onClick={() => setRetry((value) => value + 1)}>Thử lại</Button>}
+        />
+      </div>
+    );
   return <Outlet />;
 }

@@ -65,6 +65,27 @@ h6 {
   color: #fff !important;
 }
 
+.ant-modal {
+  @apply !my-0 !max-h-[95vh] !pb-0;
+}
+
+.ant-modal-wrap:not(.ant-modal-centered) .ant-modal {
+  @apply !top-[2.5vh];
+}
+
+.ant-modal .ant-modal-container {
+  @apply !box-border !flex !max-h-[95vh] !flex-col !overflow-hidden;
+}
+
+.ant-modal .ant-modal-header,
+.ant-modal .ant-modal-footer {
+  @apply !shrink-0;
+}
+
+.ant-modal .ant-modal-body {
+  @apply !min-h-0 !flex-auto !overflow-y-auto !overscroll-contain;
+}
+
 @layer components {
   .app-sidebar .ant-menu-item-selected {
     @apply !bg-[#cfe0f1] !text-[#0a315f];
@@ -79,11 +100,11 @@ h6 {
   }
 
   .ant-table-wrapper .ant-table-thead > tr > th {
-    @apply !border-b !border-solid !border-[#e3e7ed] !bg-[#f7f3ed] !px-1 !py-2 !text-[11px] !font-semibold !uppercase !tracking-[0.01em] !text-[#60708b];
+    @apply !border-x-0 !border-t-0 !border-b-[1px] !border-solid !border-[#e3e7ed] !bg-[#f7f3ed] !px-1 !py-2 !text-[11px] !font-semibold !uppercase !tracking-[0.01em] !text-[#60708b];
   }
 
   .ant-table-wrapper .ant-table-tbody > tr > td {
-    @apply !border-b !border-solid !border-[#e5e9ef] !px-1 !py-2 !text-[11px];
+    @apply !border-x-0 !border-t-0 !border-b-[1px] !border-solid !border-[#e5e9ef] !px-1 !py-2 !text-[11px];
   }
 
   .ant-table-wrapper .ant-table-thead > tr > th *,

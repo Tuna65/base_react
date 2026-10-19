@@ -7,8 +7,10 @@ export interface BodySaleLogin {
 }
 
 export interface LoginResponse {
-  access_token: string;
-  refresh_token: string;
+  token: string;
+  rf_token: string;
+  access_token?: string;
+  refresh_token?: string;
   expires_in: number;
   user: IUser;
 }

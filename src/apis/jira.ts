@@ -1,6 +1,6 @@
 import { JiraIssueQuery } from "@/models/jira.model";
 import { API_URL } from "@/configs/env";
-import { message } from "antd";
+import { message } from "@/components";
 import axios from "axios";
 
 const jiraHttp = axios.create({

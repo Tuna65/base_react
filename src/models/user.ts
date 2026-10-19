@@ -3,11 +3,15 @@ import { IBaseEntity } from ".";
 import { Orders } from "./order";
 
 export interface IUser {
+  branch_id?: number | null;
   id: number;
   username: string;
   email: string;
-  fullName: string;
-  role: "admin" | "user";
+  fullName?: string;
+  displayName?: string;
+  avatarUrl?: string | null;
+  roles?: string[];
+  role?: "admin" | "user";
   status: "ACTIVE" | "INACTIVE";
 }
 

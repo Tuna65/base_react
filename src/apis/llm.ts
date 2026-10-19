@@ -1,35 +1,38 @@
-import { message } from "antd";
-import axios from "axios";
+import http from "./gateway-http";
 
-const llmHttp = axios.create({
-  baseURL: "http://localhost:8001/api/v1/llm",
-  headers: {
-    "Content-Type": "application/json",
-  },
-});
+export interface LlmSettings { url: string; modelName: string; hasKey: boolean }
+export interface LlmSkill { id: number; name: string; description: string; systemPrompt: string }
+export interface LlmAgent { id: number; name: string; agent_id: string; skill: LlmSkill | null; createdBy?: number; status?: string }
+export interface SaveLlmSettings { url: string; modelName: string; key?: string }
+export type LlmKind = "agents" | "skills";
+export interface RunLlmRequest { message: string; [key: string]: unknown }
+export interface RunLlmResponse { agent_id: string; message: string }
+const path = "/admin/llm";
 
 export const llmApi = {
-  async plan(body: { issueKey: string; [key: string]: any }): Promise<any> {
-    try {
-      const res = await llmHttp.post("/plan", body);
-      return res;
-    } catch (error: any) {
-      console.log(error);
-      const messages = error?.response?.data?.message || error?.message || "Lỗi tạo Plan từ LLM";
-      message.error(messages);
-      return null;
-    }
+  async getSettings() { return (await http.get<LlmSettings>(`${path}/settings`)).data; },
+  async getAgents() { return (await http.get<LlmAgent[]>(`${path}/agents`)).data; },
+  async getSkills() { return (await http.get<LlmSkill[]>(`${path}/skills`)).data; },
+  async load() {
+    const [settings, agents, skills] = await Promise.all([llmApi.getSettings(), llmApi.getAgents(), llmApi.getSkills()]);
+    return { settings, agents, skills };
   },
-
-  async verify(body: { issueKey: string; [key: string]: any }): Promise<any> {
-    try {
-      const res = await llmHttp.post("/verify", body);
-      return res;
-    } catch (error: any) {
-      console.log(error);
-      const messages = error?.response?.data?.message || error?.message || "Lỗi Verify từ LLM";
-      message.error(messages);
-      return null;
-    }
+  async saveSettings(body: SaveLlmSettings) {
+    const payload = { url: body.url.trim(), modelName: body.modelName.trim(), ...(body.key?.trim() ? { key: body.key.trim() } : {}) };
+    return (await http.put<LlmSettings>(`${path}/settings`, payload)).data;
+  },
+  async save(kind: LlmKind, body: Record<string, unknown>, id?: number) {
+    // Send only DTO fields. Hidden form values and database ownership fields stay local.
+    const payload = kind === "agents"
+      ? { name: body.name, agent_id: body.agent_id, skill: body.skill ?? null }
+      : { name: body.name, description: body.description ?? "", systemPrompt: body.systemPrompt };
+    const response = id === undefined
+      ? await http.post<LlmAgent | LlmSkill>(`${path}/${kind}`, payload)
+      : await http.patch<LlmAgent | LlmSkill>(`${path}/${kind}/${id}`, payload);
+    return response.data;
+  },
+  async remove(kind: LlmKind, id: number) { await http.delete(`${path}/${kind}/${id}`); },
+  async run(body: RunLlmRequest) {
+    return (await http.post<RunLlmResponse>(`${path}/run`, body, { timeout: 130000 })).data;
   },
 };
